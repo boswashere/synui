@@ -18,6 +18,8 @@ local SOURCE = "https://raw.githubusercontent.com/boswashere/synui/refs/heads/ma
 local SynUI = loadstring(game:HttpGet(SOURCE))()
 
 -- parent = nil means: use gethui() if the executor has it, otherwise PlayerGui.
+-- This example asks for PlayerGui directly. On Delta and some other mobile
+-- executors that is the reliable choice when gethui() returns a hidden folder.
 local window = SynUI:CreateWindow({
     title = "SYNUI DEMO",
     subtitle = "EXAMPLE SCRIPT",
@@ -25,6 +27,7 @@ local window = SynUI:CreateWindow({
     size = UDim2.fromOffset(720, 480),
     toggleKey = Enum.KeyCode.RightShift,
     launcher = true,
+    parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"),
 })
 
 local home = window:Tab({

@@ -32,6 +32,14 @@ local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswash
 
 The URL above is the published location for this repository's `synui.lua`. The chunk returns the library table directly, so the trailing `()` is all you need. Load it once and reuse the table.
 
+That line only loads the library. It does not open a window by itself. If you want a window immediately, use this one-liner:
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))():CreateWindow({ title = "SYNUI", parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") })
+```
+
+The explicit `parent` skips `gethui()`. That is the safer choice on Delta and other mobile executors where the protected GUI container can keep the window hidden.
+
 SYNUI is executor-friendly:
 
 - It uses `gethui()` when available, otherwise `PlayerGui`.
