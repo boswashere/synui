@@ -48,20 +48,16 @@ local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswash
 
 The URL above is the published location for this repository's `synui.lua`. The chunk returns the library table directly, so the trailing `()` is all you need. Load it once and reuse the table.
 
-That line only loads the library. It does not open a window by itself. If you want a window immediately, use this one-liner:
-
-```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))():CreateWindow({ title = "SYNUI", parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui") })
-```
-
-The explicit `parent` skips `gethui()`. That is the safer choice on Delta and other mobile executors where the protected GUI container can keep the window hidden.
+That line returns the library table. Use the one-line demo at the top to open a complete window, or call `CreateWindow` as shown below to build your own.
 
 SYNUI is executor-friendly:
 
-- It uses `gethui()` when available, otherwise `PlayerGui`.
+- It tries `gethui()` when available, then falls back to `PlayerGui` if parenting fails. You can pass `parent` to choose the container yourself.
 - It calls `syn.protect_gui` or `protect_gui` if the executor exposes one.
-- It has a `task.defer` / `task.delay` fallback for older loadstring environments that only provide `spawn` and `delay`.
-- Loading the hosted file twice creates two independent libraries and two GUIs; load it once and reuse the returned table.
+- It uses Roblox's native `task` scheduler, with a `spawn` / `delay` fallback when `task` is unavailable.
+- Each `CreateWindow` call creates a separate GUI. Keep the returned window to update or destroy it.
+
+If the demo hits a startup error, it prints the error and shows it in an on-screen panel when `PlayerGui` is available. Download or compilation failures happen before that panel can run.
 
 ---
 
@@ -514,6 +510,10 @@ example.lua   -- readable demo source, not part of the library
 ```
 
 Everything — theme, utilities, icons, controls, layout, feedback, and the public API — lives in `synui.lua`. It targets Roblox Luau and also parses as Lua 5.4 for local syntax checks. No external packages, asset IDs, or services are required beyond Roblox itself.
+
+## Verification
+
+Version 1.1.1 passes the control, startup, and demo checks in Lua 5.4 and Luau 0.744 with a mocked Roblox API. Rendering inside Roblox or Delta has not been verified on a device.
 
 ## License
 

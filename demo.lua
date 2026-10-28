@@ -4,7 +4,7 @@ local SynUI = (function()
 -- One monochrome palette, one radius scale, one motion vocabulary.
 
 local Theme = {
-	version = "1.0.0",
+	version = "1.1.1",
 
 	colors = {
 		bg = Color3.fromRGB(8, 8, 10),
@@ -58,7 +58,7 @@ local Util = {}
 -- Executor compatibility: modern Roblox always has `task`, but older
 -- loadstring environments only expose spawn/delay. Shadow the global with a
 -- local shim so every later part uses the same scheduler.
-local task = rawget(_G, "task")
+local task = task
 if type(task) ~= "table" then
     local function pack(...)
         return { n = select("#", ...), ... }
@@ -623,11 +623,10 @@ function Util.OnViewportChanged(gui, fn)
     local version = 0
 
     local function schedule()
-        version = version + 1
-        local mine = version
         if pending then
             return
         end
+        local mine = version
         pending = true
         task.defer(function()
             pending = false
@@ -4458,7 +4457,7 @@ local function coreLength(value, base, fallback)
         return fallback
     end
     local ok, px = pcall(function()
-        return value.X.Scale * base + value.X.Offset
+        return value.Scale * base + value.Offset
     end)
     if ok and type(px) == "number" then
         return px
@@ -4480,7 +4479,7 @@ function Core.CreateWindow(cfg)
     local R = Theme.radius or { sm = 6, md = 9, lg = 12, xl = 16 }
     local version = Theme.version or "1.0.0"
     local viewport = Util.Viewport()
-    local mobile = viewport.X < 700
+    local mobile = Util.IsMobile()
     local headerHeight = mobile and 54 or 62
     local desktopW = math.min(coreLength(cfg.size and cfg.size.X, viewport.X, 760), math.max(1, viewport.X - 16))
     local desktopH = math.min(coreLength(cfg.size and cfg.size.Y, viewport.Y, 500), math.max(1, viewport.Y - 12))
@@ -4547,18 +4546,14 @@ function Core.CreateWindow(cfg)
         return sizeTween, posTween
     end
 
-    local parentGui = Util.GetParent(cfg)
     local screenGui = Util.Create("ScreenGui", {
         Name = "SynUI",
         ResetOnSpawn = false,
         IgnoreGuiInset = true,
         DisplayOrder = 999,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
-        Parent = parentGui,
     })
-    -- Keep the GUI out of the game's own hierarchy when an executor exposes a
-    -- protector. Both the Synapse-style `syn.protect_gui` and the standalone
-    -- `protect_gui` helper are common; either one is optional.
+    -- Optional executor protection must run before parenting the ScreenGui.
     pcall(function()
         local env = nil
         if type(getgenv) == "function" then
@@ -4579,6 +4574,24 @@ function Core.CreateWindow(cfg)
             protect(screenGui)
         end
     end)
+
+    local function mount(parent)
+        assert(parent ~= nil, "no GUI parent is available")
+        screenGui.Parent = parent
+    end
+    local mounted, mountError = pcall(mount, Util.GetParent(cfg))
+    if not mounted and cfg.parent == nil and CorePlayers then
+        mounted, mountError = pcall(function()
+            local player = CorePlayers.LocalPlayer
+            local parent = player and (player:FindFirstChildOfClass("PlayerGui")
+                or player:WaitForChild("PlayerGui", 5))
+            mount(parent)
+        end)
+    end
+    if not mounted then
+        screenGui:Destroy()
+        error("[SYNUI] Could not parent the window: " .. tostring(mountError), 2)
+    end
 
     local shadow = Util.Create("Frame", {
         Name = "SynUIShadow",
@@ -5192,7 +5205,7 @@ function Core.CreateWindow(cfg)
         if not vp or vp.X <= 0 or vp.Y <= 0 then
             vp = Vector2.new(1280, 720)
         end
-        local isMobile = vp.X < 700
+        local isMobile = Util.IsMobile()
         local centerX, centerY = 0.5, 0.5
         if laidOut and window._visible then
             local ok, absPos, absSize = pcall(function()
@@ -6031,7 +6044,7 @@ end
 
 
 --[[
-    SYNUI 1.0.0
+    SYNUI 1.1.1
     A single-file, dependency-free monochrome interface library for Roblox.
     Embedded SVG path icons, desktop + mobile, keyboard + touch.
 
@@ -6039,7 +6052,7 @@ end
 ]]
 
 local SynUI = {
-    _VERSION = "1.1.0",
+    _VERSION = "1.1.1",
     Theme = Theme,
     Icons = Icons,
     Util = Util,
@@ -6064,9 +6077,7 @@ return SynUI
 
 end)()
 
--- parent = nil means: use gethui() if the executor has it, otherwise PlayerGui.
--- This example asks for PlayerGui directly. On Delta and some other mobile
--- executors that is the reliable choice when gethui() returns a hidden folder.
+-- SYNUI tries gethui(), then falls back to PlayerGui if parenting fails.
 local window = SynUI:CreateWindow({
     title = "SYNUI DEMO",
     subtitle = "EXAMPLE SCRIPT",
@@ -6074,7 +6085,6 @@ local window = SynUI:CreateWindow({
     size = UDim2.fromOffset(720, 480),
     toggleKey = Enum.KeyCode.RightShift,
     launcher = true,
-    parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"),
 })
 
 local home = window:Tab({
@@ -6230,9 +6240,15 @@ aboutSection:Button({
     end,
 })
 
-end, debug.traceback)
+end, function(message)
+    if type(debug) == "table" and type(debug.traceback) == "function" then
+        return debug.traceback(tostring(message), 2)
+    end
+    return tostring(message)
+end)
 
 if not ok then
+    warn("[SYNUI] " .. tostring(err))
     local Players = game:GetService("Players")
     local player = Players.LocalPlayer
     local parent = player and player:FindFirstChildOfClass("PlayerGui")
@@ -6241,6 +6257,7 @@ if not ok then
         gui.Name = "SynUIError"
         gui.DisplayOrder = 1000
         gui.IgnoreGuiInset = true
+        gui.ResetOnSpawn = false
         gui.Parent = parent
 
         local label = Instance.new("TextLabel")
