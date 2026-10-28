@@ -12,7 +12,7 @@ local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswash
 
 ## Features
 
-- **One file.** Drop `synui.lua` into your project. No packages, no asset IDs, no image uploads.
+- **One file.** The whole library is `synui.lua`; no packages, asset IDs, or image uploads.
 - **Monochrome by design.** Near-black canvas, graphite surfaces, hairline strokes, white primary actions, gray secondary text.
 - **Desktop and mobile.** Mouse, touch, and keyboard input. Rows grow to touch-friendly sizes and the layout switches to a horizontal tab strip on narrow screens.
 - **Embedded icons.** 30 Lucide-style icons defined as 24×24 SVG path data and drawn as crisp vector Frames.
@@ -24,15 +24,13 @@ local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswash
 
 ## Install
 
-### Executor / `loadstring`
-
 Use the hosted file when `game:HttpGet` and `loadstring` are available:
 
 ```lua
 local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 ```
 
-The URL above is the published location for this repository's `synui.lua`. The chunk returns the library table directly, so the trailing `()` is all you need — no ModuleScript and no second `require`.
+The URL above is the published location for this repository's `synui.lua`. The chunk returns the library table directly, so the trailing `()` is all you need. Load it once and reuse the table.
 
 SYNUI is executor-friendly:
 
@@ -40,20 +38,6 @@ SYNUI is executor-friendly:
 - It calls `syn.protect_gui` or `protect_gui` if the executor exposes one.
 - It has a `task.defer` / `task.delay` fallback for older loadstring environments that only provide `spawn` and `delay`.
 - Loading the hosted file twice creates two independent libraries and two GUIs; load it once and reuse the returned table.
-
-### ModuleScript
-
-For a normal Roblox place:
-
-1. Insert a **ModuleScript** into `ReplicatedStorage` and name it `SynUI`.
-2. Paste the contents of `synui.lua` into it.
-3. Require it:
-
-```lua
-local SynUI = require(game:GetService("ReplicatedStorage"):WaitForChild("SynUI"))
-```
-
-There are no other modules to install.
 
 ---
 
@@ -132,6 +116,20 @@ window:Dialog({
 
 window:SetStatus("SYNCED", "ok")
 ```
+
+---
+
+## Example
+
+[`example.lua`](example.lua) is a runnable demo. It opens a window, adds two tabs, and wires up every control. The comments explain each block as you read down the file. Copy it, run it, then change the pieces you need.
+
+To try it, paste this into your executor:
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/example.lua"))()
+```
+
+The example downloads the library itself, so you do not need to install anything first.
 
 ---
 
@@ -493,9 +491,10 @@ The shipped library is one file:
 
 ```text
 synui.lua
+example.lua   -- optional demo, not part of the library
 ```
 
-Everything — theme, utilities, icons, controls, layout, feedback, and the public API — lives in that chunk. It targets Roblox Luau and also parses as Lua 5.4 for local syntax checks. No external modules, assets, or services are required beyond Roblox itself.
+Everything — theme, utilities, icons, controls, layout, feedback, and the public API — lives in `synui.lua`. It targets Roblox Luau and also parses as Lua 5.4 for local syntax checks. No external packages, asset IDs, or services are required beyond Roblox itself.
 
 ## License
 
