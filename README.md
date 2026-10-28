@@ -5,7 +5,7 @@ A single-file, dependency-free, monochrome Roblox UI library with embedded SVG i
 SYNUI gives you a compact control panel: a draggable window, tabs, sections, buttons, toggles, sliders, dropdowns, text inputs, keybinds, progress rows, notifications, dialogs, and a floating launcher. The whole library is one Lua file with no external assets and no `HttpService` dependency at runtime.
 
 ```lua
-local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/main/synui.lua"))()
+local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 ```
 
 ---
@@ -29,7 +29,7 @@ local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswash
 Use the hosted file when `game:HttpGet` and `loadstring` are available:
 
 ```lua
-local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/main/synui.lua"))()
+local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 ```
 
 The URL above is the published location for this repository's `synui.lua`.
@@ -53,7 +53,7 @@ There are no other modules to install.
 ## Quick start
 
 ```lua
-local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/main/synui.lua"))()
+local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 
 local window = SynUI:CreateWindow({
     title = "VIBECODE",
@@ -387,7 +387,7 @@ A full-screen dimmed overlay with a centered card. Cancel is a ghost button; Con
 `SynUI.Theme` is a plain table. Change values before creating the window:
 
 ```lua
-local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/main/synui.lua"))()
+local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 
 SynUI.Theme.colors.bg = Color3.fromRGB(10, 10, 12)
 SynUI.Theme.colors.surface = Color3.fromRGB(16, 16, 19)
