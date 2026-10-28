@@ -483,6 +483,11 @@ function Util.MakeDraggable(frame, handle, gui)
         if not dragging or not input then
             return
         end
+        local kind = input.UserInputType
+        if kind ~= Enum.UserInputType.MouseMovement
+            and kind ~= Enum.UserInputType.Touch then
+            return
+        end
         local viewport = Util.Viewport()
         local sizeX, sizeY = 0, 0
         pcall(function()
@@ -4556,23 +4561,37 @@ function Core.CreateWindow(cfg)
     })
     Util.Corner(brandTile, 8)
     Util.Stroke(brandTile, C.line, 1, 0.55)
-    local brandPositions = {
-        { 7, 7, 0.05 },
-        { 15, 7, 0.72 },
-        { 7, 15, 0.45 },
-        { 15, 15, 0.86 },
-    }
-    for index, spec in ipairs(brandPositions) do
-        Util.Create("Frame", {
-            Name = "BrandSquare" .. index,
-            BackgroundColor3 = C.white,
-            BackgroundTransparency = spec[3],
-            BorderSizePixel = 0,
-            Position = UDim2.fromOffset(spec[1], spec[2]),
-            Size = UDim2.fromOffset(6, 6),
+    local windowIcon = cfg.icon
+    if windowIcon == nil or windowIcon == "" or windowIcon == "grid" then
+        local brandPositions = {
+            { 7, 7, 0.05 },
+            { 15, 7, 0.72 },
+            { 7, 15, 0.45 },
+            { 15, 15, 0.86 },
+        }
+        for index, spec in ipairs(brandPositions) do
+            Util.Create("Frame", {
+                Name = "BrandSquare" .. index,
+                BackgroundColor3 = C.white,
+                BackgroundTransparency = spec[3],
+                BorderSizePixel = 0,
+                Position = UDim2.fromOffset(spec[1], spec[2]),
+                Size = UDim2.fromOffset(6, 6),
+                ZIndex = 6,
+                Parent = brandTile,
+            })
+        end
+    else
+        local brandIcon = Util.Create("Frame", {
+            Name = "BrandIcon",
+            BackgroundTransparency = 1,
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            Size = UDim2.fromOffset(18, 18),
             ZIndex = 6,
             Parent = brandTile,
         })
+        Icons.Draw(brandIcon, windowIcon, 18, C.white, 2)
     end
 
     local titleLabel = Util.Text(dragHandle, {
