@@ -4,6 +4,22 @@ A single-file, dependency-free, monochrome Roblox UI library with embedded SVG i
 
 SYNUI gives you a compact control panel: a draggable window, tabs, sections, buttons, toggles, sliders, dropdowns, text inputs, keybinds, progress rows, notifications, dialogs, and a floating launcher. The whole library is one Lua file with no external assets and no `HttpService` dependency at runtime.
 
+## One-line demo
+
+Run this and nothing else. It contains the library and the demo in one file, so it does not use a second `loadstring`:
+
+```lua
+loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/demo.lua"))()
+```
+
+If GitHub raw is blocked, use the CDN copy:
+
+```lua
+loadstring(game:HttpGet("https://cdn.jsdelivr.net/gh/boswashere/synui@main/demo.lua"))()
+```
+
+For the library on its own:
+
 ```lua
 local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 ```
@@ -129,15 +145,9 @@ window:SetStatus("SYNCED", "ok")
 
 ## Example
 
-[`example.lua`](example.lua) is a runnable demo. It opens a window, adds two tabs, and wires up every control. The comments explain each block as you read down the file. Copy it, run it, then change the pieces you need.
+[`demo.lua`](demo.lua) is the self-contained demo used by the one-line loader above. It opens a window, adds two tabs, and wires up every control. There is no second download or nested `loadstring`.
 
-To try it, paste this into your executor:
-
-```lua
-loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/example.lua"))()
-```
-
-The example downloads the library itself, so you do not need to install anything first.
+[`example.lua`](example.lua) is the readable source for that demo. The comments explain each block. Copy it, run it, then change the pieces you need. It downloads the library itself, so it needs `loadstring` and `game:HttpGet` to work.
 
 ---
 
@@ -499,7 +509,8 @@ The shipped library is one file:
 
 ```text
 synui.lua
-example.lua   -- optional demo, not part of the library
+demo.lua      -- self-contained one-line demo (library + example)
+example.lua   -- readable demo source, not part of the library
 ```
 
 Everything — theme, utilities, icons, controls, layout, feedback, and the public API — lives in `synui.lua`. It targets Roblox Luau and also parses as Lua 5.4 for local syntax checks. No external packages, asset IDs, or services are required beyond Roblox itself.
