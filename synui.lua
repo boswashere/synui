@@ -53,6 +53,59 @@ end
 
 local Util = {}
 
+-- Executor compatibility: modern Roblox always has `task`, but older
+-- loadstring environments only expose spawn/delay. Shadow the global with a
+-- local shim so every later part uses the same scheduler.
+local task = rawget(_G, "task")
+if type(task) ~= "table" then
+    local function pack(...)
+        return { n = select("#", ...), ... }
+    end
+    local function run(fn, args)
+        if type(fn) == "function" then
+            fn(table.unpack(args, 1, args.n or #args))
+        end
+    end
+    task = {
+        defer = function(fn, ...)
+            local args = pack(...)
+            local wrapped = function()
+                run(fn, args)
+            end
+            if type(spawn) == "function" then
+                spawn(wrapped)
+            else
+                coroutine.wrap(wrapped)()
+            end
+        end,
+        delay = function(seconds, fn, ...)
+            local args = pack(...)
+            local wrapped = function()
+                run(fn, args)
+            end
+            if type(delay) == "function" then
+                delay(seconds, wrapped)
+            else
+                coroutine.wrap(function()
+                    wait(seconds)
+                    wrapped()
+                end)()
+            end
+        end,
+        spawn = function(fn, ...)
+            local args = pack(...)
+            local wrapped = function()
+                run(fn, args)
+            end
+            if type(spawn) == "function" then
+                spawn(wrapped)
+            else
+                coroutine.wrap(wrapped)()
+            end
+        end,
+    }
+end
+
 local function service(name)
     local ok, svc = pcall(function()
         return game:GetService(name)
@@ -4501,6 +4554,29 @@ function Core.CreateWindow(cfg)
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
         Parent = parentGui,
     })
+    -- Keep the GUI out of the game's own hierarchy when an executor exposes a
+    -- protector. Both the Synapse-style `syn.protect_gui` and the standalone
+    -- `protect_gui` helper are common; either one is optional.
+    pcall(function()
+        local env = nil
+        if type(getgenv) == "function" then
+            env = getgenv()
+        end
+        local syn = env and env.syn or nil
+        if not syn and type(_G) == "table" then
+            syn = rawget(_G, "syn")
+        end
+        local protect = syn and syn.protect_gui or nil
+        if type(protect) ~= "function" and env then
+            protect = env.protect_gui
+        end
+        if type(protect) ~= "function" and type(_G) == "table" then
+            protect = rawget(_G, "protect_gui")
+        end
+        if type(protect) == "function" then
+            protect(screenGui)
+        end
+    end)
 
     local shadow = Util.Create("Frame", {
         Name = "SynUIShadow",
@@ -5961,7 +6037,7 @@ end
 ]]
 
 local SynUI = {
-    _VERSION = "1.0.0",
+    _VERSION = "1.1.0",
     Theme = Theme,
     Icons = Icons,
     Util = Util,

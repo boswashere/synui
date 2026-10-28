@@ -32,7 +32,14 @@ Use the hosted file when `game:HttpGet` and `loadstring` are available:
 local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 ```
 
-The URL above is the published location for this repository's `synui.lua`.
+The URL above is the published location for this repository's `synui.lua`. The chunk returns the library table directly, so the trailing `()` is all you need — no ModuleScript and no second `require`.
+
+SYNUI is executor-friendly:
+
+- It uses `gethui()` when available, otherwise `PlayerGui`.
+- It calls `syn.protect_gui` or `protect_gui` if the executor exposes one.
+- It has a `task.defer` / `task.delay` fallback for older loadstring environments that only provide `spawn` and `delay`.
+- Loading the hosted file twice creates two independent libraries and two GUIs; load it once and reuse the returned table.
 
 ### ModuleScript
 
