@@ -408,8 +408,8 @@ A full-screen dimmed overlay with a centered card. Cancel is a ghost button; Con
 ```lua
 local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 
-SynUI.Theme.colors.bg = Color3.fromRGB(10, 10, 12)
-SynUI.Theme.colors.surface = Color3.fromRGB(16, 16, 19)
+SynUI.Theme.colors.bg = Color3.fromRGB(10, 10, 10)
+SynUI.Theme.colors.surface = Color3.fromRGB(16, 16, 16)
 SynUI.Theme.radius.lg = 14
 
 local window = SynUI:CreateWindow({ title = "THEMED" })
@@ -419,12 +419,12 @@ Theme fields:
 
 | Field | Contents |
 | --- | --- |
-| `colors` | `bg`, `surface`, `raised`, `hover`, `line`, `text`, `muted`, `dim`, `faint`, `white`, `black` |
+| `colors` | `bg`, `surface`, `raised`, `hover`, `line`, `text`, `muted`, `dim`, `faint`, `field`, `panel`, `white`, `black` |
 | `fonts` | `regular` (Gotham), `medium` (GothamMedium), `bold` (GothamBold), `mono` (Code) |
-| `radius` | `sm = 6`, `md = 9`, `lg = 12`, `xl = 16` |
-| `motion` | `fast = 0.12`, `normal = 0.18`, `slow = 0.28` |
-| `stroke` | Hairline stroke transparency, `0.82` |
-| `pad` | Base padding, `14` |
+| `radius` | `sm = 8`, `md = 10`, `lg = 14`, `xl = 20` |
+| `motion` | `fast = 0.14`, `normal = 0.20`, `slow = 0.30` |
+| `stroke` | Hairline stroke transparency, `0.62` |
+| `pad` | Base padding, `16` |
 
 Keep the palette monochrome. SYNUI is intentionally hue-free; the visual hierarchy comes from surface lightness, text weight, and spacing rather than accent colors.
 
@@ -513,7 +513,7 @@ Everything — theme, utilities, icons, controls, layout, feedback, and the publ
 
 ## Verification
 
-Version 1.1.1 passes the control, startup, and demo checks in Lua 5.4 and Luau 0.744 with a mocked Roblox API. Rendering inside Roblox or Delta has not been verified on a device.
+Version 1.3.0 passes the control, startup, and demo checks in Lua 5.4 and Luau 0.744 with a mocked Roblox API. Rendering inside Roblox or Delta has not been verified on a device.
 
 ## License
 

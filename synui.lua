@@ -2,20 +2,22 @@
 -- One monochrome palette, one radius scale, one motion vocabulary.
 
 local Theme = {
-	version = "1.1.1",
+	version = "1.3.0",
 
 	colors = {
-		bg = Color3.fromRGB(8, 8, 10),
-		surface = Color3.fromRGB(14, 14, 17),
-		raised = Color3.fromRGB(19, 19, 23),
-		hover = Color3.fromRGB(26, 26, 31),
-		line = Color3.fromRGB(40, 40, 46),
-		text = Color3.fromRGB(246, 246, 248),
-		muted = Color3.fromRGB(154, 154, 163),
-		dim = Color3.fromRGB(104, 104, 113),
-		faint = Color3.fromRGB(72, 72, 80),
+		bg = Color3.fromRGB(9, 9, 9),
+		surface = Color3.fromRGB(16, 16, 16),
+		raised = Color3.fromRGB(20, 20, 20),
+		hover = Color3.fromRGB(31, 31, 31),
+		line = Color3.fromRGB(48, 48, 48),
+		text = Color3.fromRGB(245, 245, 245),
+		muted = Color3.fromRGB(163, 163, 163),
+		dim = Color3.fromRGB(140, 140, 140),
+		faint = Color3.fromRGB(112, 112, 112),
+		field = Color3.fromRGB(25, 25, 25),
+		panel = Color3.fromRGB(18, 18, 18),
 		white = Color3.fromRGB(255, 255, 255),
-		black = Color3.fromRGB(5, 5, 6),
+		black = Color3.fromRGB(0, 0, 0),
 	},
 
 	fonts = {
@@ -25,14 +27,14 @@ local Theme = {
 		mono = Enum.Font.Code,
 	},
 
-	radius = { sm = 6, md = 9, lg = 12, xl = 16 },
+	radius = { sm = 8, md = 10, lg = 14, xl = 20 },
 
-	motion = { fast = 0.12, normal = 0.18, slow = 0.28 },
+	motion = { fast = 0.14, normal = 0.2, slow = 0.3 },
 }
 
 -- Hairline stroke transparency and the base spacing unit used by every part.
-Theme.stroke = 0.82
-Theme.pad = 14
+Theme.stroke = 0.62
+Theme.pad = 16
 
 -- Small shared helper. Kept on Theme so later parts can soften a surface
 -- without inventing ad-hoc colors.
@@ -306,11 +308,11 @@ function Util.Text(parent, props)
         BorderSizePixel = 0,
         Font = (Theme and Theme.fonts and Theme.fonts.regular) or Enum.Font.Gotham,
         Text = "",
-        TextSize = 11,
-        TextColor3 = (Theme and Theme.colors and Theme.colors.text) or Color3.fromRGB(246, 246, 248),
+		TextSize = 12,
+		TextColor3 = (Theme and Theme.colors and Theme.colors.text) or Color3.fromRGB(245, 245, 245),
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
-        Size = UDim2.new(1, 0, 0, 14),
+		Size = UDim2.new(1, 0, 0, 16),
         RichText = false,
     }
     if type(props) == "table" then
@@ -327,13 +329,13 @@ function Util.Text(parent, props)
 end
 
 function Util.Label(parent, text, size, color, font)
-    local px = tonumber(size) or 11
+	local px = tonumber(size) or 12
     return Util.Text(parent, {
         Text = tostring(text == nil and "" or text),
         TextSize = px,
-        TextColor3 = color or ((Theme and Theme.colors and Theme.colors.text) or Color3.fromRGB(246, 246, 248)),
+		TextColor3 = color or ((Theme and Theme.colors and Theme.colors.text) or Color3.fromRGB(245, 245, 245)),
         Font = font or ((Theme and Theme.fonts and Theme.fonts.regular) or Enum.Font.Gotham),
-        Size = UDim2.new(1, 0, 0, math.max(14, px + 4)),
+		Size = UDim2.new(1, 0, 0, math.max(16, px + 5)),
     })
 end
 
@@ -695,7 +697,7 @@ function Util.Hover(button, normalColor, hoverColor)
         return function() end
     end
     local normal = normalColor or button.BackgroundColor3
-    local hover = hoverColor or ((Theme and Theme.colors and Theme.colors.hover) or Color3.fromRGB(26, 26, 31))
+    local hover = hoverColor or ((Theme and Theme.colors and Theme.colors.hover) or Color3.fromRGB(31, 31, 31))
     local connections = {}
     pcall(function()
         table.insert(connections, button.MouseEnter:Connect(function()
@@ -791,7 +793,7 @@ function Util.AutoScroll(scrollFrame)
     pcall(function()
         scrollFrame.ClipsDescendants = true
         scrollFrame.ScrollBarThickness = 2
-        scrollFrame.ScrollBarImageColor3 = (Theme and Theme.colors and Theme.colors.faint) or Color3.fromRGB(72, 72, 80)
+        scrollFrame.ScrollBarImageColor3 = (Theme and Theme.colors and Theme.colors.faint) or Color3.fromRGB(112, 112, 112)
         scrollFrame.ScrollingDirection = Enum.ScrollingDirection.Y
     end)
     local automatic = false
@@ -849,7 +851,7 @@ end
 function Util.Divider(parent)
     local line = Util.Create("Frame", {
         Name = "Divider",
-        BackgroundColor3 = (Theme and Theme.colors and Theme.colors.line) or Color3.fromRGB(40, 40, 46),
+        BackgroundColor3 = (Theme and Theme.colors and Theme.colors.line) or Color3.fromRGB(48, 48, 48),
         BackgroundTransparency = 0.15,
         BorderSizePixel = 0,
         Size = UDim2.new(1, 0, 0, 1),
@@ -1461,7 +1463,7 @@ local function addDivider(row)
         Position = UDim2.new(0, 0, 1, -1),
         Size = UDim2.new(1, 0, 0, 1),
         BackgroundColor3 = LINE,
-        BackgroundTransparency = 0.35,
+        BackgroundTransparency = 0.62,
         BorderSizePixel = 0,
         ZIndex = 3,
     })
@@ -1484,19 +1486,20 @@ end
 -- A label + optional description stacked over a full-width field. Shared by
 -- Input and Dropdown so the two controls line up exactly.
 local function fieldRow(section, cfg, fieldHeight)
-    local labelH = 15
-    local descH = 12
-    local gap = 4
+    local labelH = 20
+    local descH = 16
+    local gap = 6
+    local bottomPad = 8
     local hasDesc = cfg.description ~= nil and cfg.description ~= ""
     local fieldY = labelH + (hasDesc and descH or 0) + gap
-    local row = newRow(section, fieldY + fieldHeight + 2)
+    local row = newRow(section, fieldY + fieldHeight + bottomPad)
 
     local label = Util.Text(row, {
         Text = cfg.text or "",
         Position = UDim2.new(0, 0, 0, 0),
         Size = UDim2.new(1, 0, 0, labelH),
         Font = Theme.fonts.medium,
-        TextSize = 11,
+        TextSize = 14,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1510,7 +1513,7 @@ local function fieldRow(section, cfg, fieldHeight)
             Position = UDim2.new(0, 0, 0, labelH),
             Size = UDim2.new(1, 0, 0, descH),
             Font = Theme.fonts.regular,
-            TextSize = 9,
+            TextSize = 12,
             TextColor3 = DIM,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
@@ -1540,14 +1543,15 @@ end
 function Controls.Button(section, cfg)
     cfg = cfg or {}
     local mobile = Util.IsMobile()
-    local buttonH = mobile and 46 or 40
-    local row = newRow(section, buttonH + 4)
+    local hasDesc = cfg.description ~= nil and cfg.description ~= ""
+    local buttonH = hasDesc and (mobile and 56 or 52) or (mobile and 48 or 44)
+    local row = newRow(section, buttonH + 8)
 
     local variant = cfg.variant or "default"
     local primary = variant == "primary"
     local ghost = variant == "ghost"
-    local base = primary and WHITE or (ghost and SURFACE or RAISED)
-    local hovered = primary and Color3.fromRGB(228, 228, 228) or HOVER
+    local base = primary and WHITE or (ghost and SURFACE or (Theme.colors.field or RAISED))
+    local hovered = primary and Color3.fromRGB(232, 232, 232) or HOVER
 
     local button = Util.Create("TextButton", {
         Size = UDim2.new(1, 0, 0, buttonH),
@@ -1559,16 +1563,16 @@ function Controls.Button(section, cfg)
         ZIndex = 1,
     })
     button.Parent = row
-    Util.Corner(button, 8)
-    Util.Stroke(button, LINE, 1, primary and 1 or 0.4)
+    Util.Corner(button, Theme.radius.md)
+    Util.Stroke(button, LINE, 1, primary and 0.9 or 0.48)
 
     local left = 14
     if cfg.icon then
-        left = 37
+        left = 40
         local iconColor = primary and Theme.colors.black or TEXT
         local iconFrame = Icons.Draw(button, cfg.icon, 16, iconColor)
         if iconFrame then
-            iconFrame.Position = UDim2.new(0, 13, 0.5, 0)
+            iconFrame.Position = UDim2.new(0, 15, 0.5, 0)
             iconFrame.AnchorPoint = Vector2.new(0, 0.5)
             iconFrame.ZIndex = 2
         end
@@ -1576,7 +1580,7 @@ function Controls.Button(section, cfg)
 
     local right = 14
     if cfg.chevron then
-        right = 34
+        right = 38
         local chevron = Icons.Draw(button, "chevron-right", 14, primary and Theme.colors.black or MUTED)
         if chevron then
             chevron.Position = UDim2.new(1, -13, 0.5, 0)
@@ -1585,12 +1589,11 @@ function Controls.Button(section, cfg)
         end
     end
 
-    local hasDesc = cfg.description ~= nil and cfg.description ~= ""
     local top = 0
     local labelH = buttonH
     if hasDesc then
-        labelH = 14
-        top = math.floor((buttonH - 27) / 2)
+        labelH = 16
+        top = math.max(4, math.floor((buttonH - 34) / 2))
     end
 
     local label = Util.Text(button, {
@@ -1598,7 +1601,7 @@ function Controls.Button(section, cfg)
         Position = UDim2.new(0, left, 0, top),
         Size = UDim2.new(1, -(left + right), 0, labelH),
         Font = Theme.fonts.medium,
-        TextSize = 11,
+        TextSize = 14,
         TextColor3 = primary and Theme.colors.black or TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1610,10 +1613,10 @@ function Controls.Button(section, cfg)
     if hasDesc then
         descLabel = Util.Text(button, {
             Text = cfg.description,
-            Position = UDim2.new(0, left, 0, top + 16),
-            Size = UDim2.new(1, -(left + right), 0, 11),
+            Position = UDim2.new(0, left, 0, top + 18),
+            Size = UDim2.new(1, -(left + right), 0, 14),
             Font = Theme.fonts.regular,
-            TextSize = 9,
+            TextSize = 12,
             TextColor3 = primary and Theme.colors.black or DIM,
             TextTransparency = primary and 0.35 or 0,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1671,9 +1674,9 @@ end
 function Controls.Toggle(section, cfg)
     cfg = cfg or {}
     local mobile = Util.IsMobile()
-    local rowH = mobile and 50 or 46
-    local trackW = mobile and 44 or 38
-    local trackH = mobile and 24 or 20
+    local rowH = mobile and 58 or 54
+    local trackW = mobile and 48 or 44
+    local trackH = mobile and 26 or 22
     local row = newRow(section, rowH)
 
     local hit = Util.Create("TextButton", {
@@ -1688,8 +1691,8 @@ function Controls.Toggle(section, cfg)
     hit.Parent = row
 
     local hasDesc = cfg.description ~= nil and cfg.description ~= ""
-    local labelH = 14
-    local descH = 12
+    local labelH = 20
+    local descH = 16
     local contentH = hasDesc and (labelH + 2 + descH) or labelH
     local top = math.floor((rowH - contentH) / 2)
     local labelW = trackW + 20
@@ -1699,7 +1702,7 @@ function Controls.Toggle(section, cfg)
         Position = UDim2.new(0, 0, 0, top),
         Size = UDim2.new(1, -labelW, 0, labelH),
         Font = Theme.fonts.medium,
-        TextSize = 11,
+        TextSize = 14,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1713,7 +1716,7 @@ function Controls.Toggle(section, cfg)
             Position = UDim2.new(0, 0, 0, top + labelH + 2),
             Size = UDim2.new(1, -labelW, 0, descH),
             Font = Theme.fonts.regular,
-            TextSize = 9,
+            TextSize = 12,
             TextColor3 = DIM,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
@@ -1726,7 +1729,7 @@ function Controls.Toggle(section, cfg)
         Position = UDim2.new(1, 0, 0.5, 0),
         AnchorPoint = Vector2.new(1, 0.5),
         Size = UDim2.new(0, trackW, 0, trackH),
-        BackgroundColor3 = RAISED,
+        BackgroundColor3 = Theme.colors.field or RAISED,
         BorderSizePixel = 0,
         ZIndex = 2,
     })
@@ -1736,8 +1739,8 @@ function Controls.Toggle(section, cfg)
 
     local knob = Util.Create("Frame", {
         AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0, 9, 0.5, 0),
-        Size = UDim2.new(0, 12, 0, 12),
+        Position = UDim2.new(0, 11, 0.5, 0),
+        Size = UDim2.new(0, trackH - 6, 0, trackH - 6),
         BackgroundColor3 = DIM,
         BorderSizePixel = 0,
         ZIndex = 3,
@@ -1752,7 +1755,7 @@ function Controls.Toggle(section, cfg)
     local api = {}
 
     local function knobX(on)
-        local size = on and 14 or 12
+        local size = trackH - 6
         if on then
             return trackW - 3 - size / 2
         end
@@ -1760,11 +1763,11 @@ function Controls.Toggle(section, cfg)
     end
 
     local function paint(on, animate)
-        local knobSize = on and 14 or 12
+        local knobSize = trackH - 6
         local targetSize = UDim2.new(0, knobSize, 0, knobSize)
         local targetPos = UDim2.new(0, knobX(on), 0.5, 0)
-        local targetColor = on and WHITE or DIM
-        local trackColor = on and LINE or RAISED
+        local targetColor = on and Theme.colors.black or DIM
+        local trackColor = on and WHITE or (Theme.colors.field or RAISED)
 
         if animate then
             Util.Tween(track, { BackgroundColor3 = trackColor }, Theme.motion.normal)
@@ -1817,7 +1820,8 @@ end
 function Controls.Slider(section, cfg)
     cfg = cfg or {}
     local mobile = Util.IsMobile()
-    local row = newRow(section, 52)
+    local sliderHeight = mobile and 64 or 60
+    local row = newRow(section, sliderHeight)
 
     local minV = tonumber(cfg.min) or 0
     local maxV = tonumber(cfg.max) or 100
@@ -1831,11 +1835,11 @@ function Controls.Slider(section, cfg)
     end
 
     local suffix = cfg.suffix and tostring(cfg.suffix) or ""
-    local knobSize = mobile and 16 or 12
+    local knobSize = mobile and 18 or 14
     local inset = mobile and 8 or 6
 
     local hit = Util.Create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 52),
+        Size = UDim2.new(1, 0, 0, sliderHeight),
         BackgroundTransparency = 1,
         BackgroundColor3 = WHITE,
         BorderSizePixel = 0,
@@ -1848,9 +1852,9 @@ function Controls.Slider(section, cfg)
     Util.Text(row, {
         Text = cfg.text or "",
         Position = UDim2.new(0, 0, 0, 2),
-        Size = UDim2.new(1, -118, 0, 15),
+        Size = UDim2.new(1, -118, 0, 20),
         Font = Theme.fonts.medium,
-        TextSize = 11,
+        TextSize = 14,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1861,9 +1865,9 @@ function Controls.Slider(section, cfg)
     local valueLabel = Util.Text(row, {
         Text = "",
         Position = UDim2.new(1, -110, 0, 2),
-        Size = UDim2.new(0, 110, 0, 15),
+        Size = UDim2.new(0, 110, 0, 20),
         Font = Theme.fonts.mono,
-        TextSize = 9,
+        TextSize = 12,
         TextColor3 = MUTED,
         TextXAlignment = Enum.TextXAlignment.Right,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1871,8 +1875,8 @@ function Controls.Slider(section, cfg)
     })
 
     local track = Util.Create("Frame", {
-        Position = UDim2.new(0, inset, 0, 36),
-        Size = UDim2.new(1, -(inset * 2), 0, 4),
+        Position = UDim2.new(0, inset, 0, mobile and 46 or 43),
+        Size = UDim2.new(1, -(inset * 2), 0, 5),
         BackgroundColor3 = RAISED,
         BorderSizePixel = 0,
         ZIndex = 2,
@@ -2047,14 +2051,14 @@ function Controls.Dropdown(section, cfg)
     cfg = cfg or {}
     local mobile = Util.IsMobile()
     local multi = cfg.multi == true
-    local fieldH = mobile and 42 or 36
-    local itemH = mobile and 40 or 32
+    local fieldH = mobile and 48 or 44
+    local itemH = mobile and 44 or 36
     local row, fieldY = fieldRow(section, cfg, fieldH)
 
     local field = Util.Create("TextButton", {
         Position = UDim2.new(0, 0, 0, fieldY),
         Size = UDim2.new(1, 0, 0, fieldH),
-        BackgroundColor3 = RAISED,
+        BackgroundColor3 = Theme.colors.field or RAISED,
         BorderSizePixel = 0,
         AutoButtonColor = false,
         Text = "",
@@ -2062,7 +2066,7 @@ function Controls.Dropdown(section, cfg)
         ZIndex = 1,
     })
     field.Parent = row
-    Util.Corner(field, 8)
+    Util.Corner(field, Theme.radius.md)
 
     local fieldStroke = Util.Create("UIStroke", {
         Color = LINE,
@@ -2077,7 +2081,7 @@ function Controls.Dropdown(section, cfg)
         Position = UDim2.new(0, 12, 0, 0),
         Size = UDim2.new(1, -42, 1, 0),
         Font = Theme.fonts.medium,
-        TextSize = 10,
+        TextSize = 13,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -2092,7 +2096,7 @@ function Controls.Dropdown(section, cfg)
         chevron.ZIndex = 2
     end
 
-    addHover(field, RAISED, HOVER)
+    addHover(field, Theme.colors.field or RAISED, HOVER)
 
     local options = {}
     if type(cfg.options) == "table" then
@@ -2118,7 +2122,7 @@ function Controls.Dropdown(section, cfg)
         ZIndex = 1,
     })
     list.Parent = block
-    Util.Corner(list, 8)
+    Util.Corner(list, Theme.radius.lg)
     Util.Stroke(list, LINE, 1, 0.4)
 
     local listLayout = Util.Create("UIListLayout", {
@@ -2230,7 +2234,7 @@ function Controls.Dropdown(section, cfg)
                 ZIndex = 1,
             })
             item.Parent = list
-            Util.Corner(item, 6)
+            Util.Corner(item, Theme.radius.sm)
             addHover(item, SURFACE, HOVER)
 
             local itemLabel = Util.Text(item, {
@@ -2238,7 +2242,7 @@ function Controls.Dropdown(section, cfg)
                 Position = UDim2.new(0, 10, 0, 0),
                 Size = UDim2.new(1, -36, 1, 0),
                 Font = Theme.fonts.regular,
-                TextSize = 10,
+                TextSize = 12,
                 TextColor3 = MUTED,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Center,
@@ -2452,18 +2456,18 @@ end
 function Controls.Input(section, cfg)
     cfg = cfg or {}
     local mobile = Util.IsMobile()
-    local fieldH = mobile and 42 or 36
+    local fieldH = mobile and 48 or 44
     local row, fieldY = fieldRow(section, cfg, fieldH)
 
     local box = Util.Create("TextBox", {
         Position = UDim2.new(0, 0, 0, fieldY),
         Size = UDim2.new(1, 0, 0, fieldH),
-        BackgroundColor3 = BG,
+        BackgroundColor3 = Theme.colors.field or BG,
         BorderSizePixel = 0,
         Text = cfg.value ~= nil and tostring(cfg.value) or "",
         TextColor3 = TEXT,
         Font = Theme.fonts.regular,
-        TextSize = 11,
+        TextSize = 13,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
         PlaceholderText = cfg.placeholder or "",
@@ -2475,7 +2479,7 @@ function Controls.Input(section, cfg)
         ZIndex = 1,
     })
     box.Parent = row
-    Util.Corner(box, 8)
+    Util.Corner(box, Theme.radius.md)
     Util.Padding(box, 12, 0)
 
     local boxStroke = Util.Create("UIStroke", {
@@ -2571,12 +2575,12 @@ end
 function Controls.Keybind(section, cfg)
     cfg = cfg or {}
     local mobile = Util.IsMobile()
-    local rowH = mobile and 50 or 46
+    local rowH = mobile and 58 or 54
     local row = newRow(section, rowH)
 
     local hasDesc = cfg.description ~= nil and cfg.description ~= ""
-    local labelH = 14
-    local descH = 12
+    local labelH = 20
+    local descH = 16
     local contentH = hasDesc and (labelH + 2 + descH) or labelH
     local top = math.floor((rowH - contentH) / 2)
     local reserve = mobile and 118 or 104
@@ -2586,7 +2590,7 @@ function Controls.Keybind(section, cfg)
         Position = UDim2.new(0, 0, 0, top),
         Size = UDim2.new(1, -reserve, 0, labelH),
         Font = Theme.fonts.medium,
-        TextSize = 11,
+        TextSize = 14,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -2600,7 +2604,7 @@ function Controls.Keybind(section, cfg)
             Position = UDim2.new(0, 0, 0, top + labelH + 2),
             Size = UDim2.new(1, -reserve, 0, descH),
             Font = Theme.fonts.regular,
-            TextSize = 9,
+            TextSize = 12,
             TextColor3 = DIM,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
@@ -2609,10 +2613,10 @@ function Controls.Keybind(section, cfg)
         })
     end
 
-    local hitW = mobile and 104 or 96
-    local hitH = mobile and 46 or 44
-    local pillW = mobile and 84 or 76
-    local pillH = mobile and 30 or 26
+    local hitW = mobile and 112 or 104
+    local hitH = mobile and 52 or 48
+    local pillW = mobile and 100 or 92
+    local pillH = mobile and 36 or 32
 
     local hit = Util.Create("TextButton", {
         Position = UDim2.new(1, 0, 0.5, 0),
@@ -2636,7 +2640,7 @@ function Controls.Keybind(section, cfg)
         ZIndex = 2,
     })
     pill.Parent = hit
-    Util.Corner(pill, 6)
+    Util.Corner(pill, Theme.radius.sm)
     local pillStroke = Util.Create("UIStroke", {
         Color = LINE,
         Thickness = 1,
@@ -2649,7 +2653,7 @@ function Controls.Keybind(section, cfg)
         Text = "",
         Size = UDim2.new(1, 0, 1, 0),
         Font = Theme.fonts.mono,
-        TextSize = 9,
+        TextSize = 11,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Center,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -2766,15 +2770,15 @@ end
 
 function Controls.Progress(section, cfg)
     cfg = cfg or {}
-    local row = newRow(section, 46)
+    local row = newRow(section, 56)
     local value = Util.Clamp(tonumber(cfg.value) or 0, 0, 1)
 
     Util.Text(row, {
         Text = cfg.text or "",
         Position = UDim2.new(0, 0, 0, 2),
-        Size = UDim2.new(1, -72, 0, 15),
+        Size = UDim2.new(1, -72, 0, 20),
         Font = Theme.fonts.medium,
-        TextSize = 11,
+        TextSize = 14,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -2785,9 +2789,9 @@ function Controls.Progress(section, cfg)
     local valueLabel = Util.Text(row, {
         Text = "",
         Position = UDim2.new(1, -66, 0, 2),
-        Size = UDim2.new(0, 66, 0, 15),
+        Size = UDim2.new(0, 66, 0, 20),
         Font = Theme.fonts.mono,
-        TextSize = 9,
+        TextSize = 11,
         TextColor3 = MUTED,
         TextXAlignment = Enum.TextXAlignment.Right,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -2795,8 +2799,8 @@ function Controls.Progress(section, cfg)
     })
 
     local track = Util.Create("Frame", {
-        Position = UDim2.new(0, 0, 0, 31),
-        Size = UDim2.new(1, 0, 0, 4),
+        Position = UDim2.new(0, 0, 0, 39),
+        Size = UDim2.new(1, 0, 0, 5),
         BackgroundColor3 = RAISED,
         BorderSizePixel = 0,
         ZIndex = 2,
@@ -2846,9 +2850,9 @@ end
 
 local Layout = {}
 
-local LayoutPad = 14
-local LayoutMobilePad = 12
-local LayoutStrokeTransparency = 0.82
+local LayoutPad = 16
+local LayoutMobilePad = 14
+local LayoutStrokeTransparency = 0.62
 
 local function LayoutStroke(obj, transparency)
     Util.Stroke(obj, Theme.colors.line, 1, transparency or Theme.stroke or LayoutStrokeTransparency)
@@ -2910,7 +2914,7 @@ local function LayoutText(parent, props)
         Font = Theme.fonts.regular,
         Text = "",
         TextColor3 = Theme.colors.muted,
-        TextSize = 10,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
         RichText = false,
@@ -2954,15 +2958,15 @@ function Layout.Label(a, b)
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         Text = tostring(cfg.text or ""),
-        TextSize = 10,
+        TextSize = 12,
         TextColor3 = cfg.color or Theme.colors.muted,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
     })
     LayoutCreate("UIPadding", label, {
-        PaddingTop = UDim.new(0, 8),
-        PaddingBottom = UDim.new(0, 8),
+        PaddingTop = UDim.new(0, 10),
+        PaddingBottom = UDim.new(0, 10),
     })
     return label
 end
@@ -2979,16 +2983,16 @@ function Layout.Paragraph(a, b)
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         Text = tostring(cfg.text or ""),
-        TextSize = 10,
+        TextSize = 12,
         TextColor3 = cfg.color or Theme.colors.muted,
         TextWrapped = true,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Top,
     })
-    LayoutSetLineHeight(paragraph, 1.65)
+    LayoutSetLineHeight(paragraph, 1.55)
     LayoutCreate("UIPadding", paragraph, {
-        PaddingTop = UDim.new(0, 6),
-        PaddingBottom = UDim.new(0, 8),
+        PaddingTop = UDim.new(0, 10),
+        PaddingBottom = UDim.new(0, 12),
     })
     return paragraph
 end
@@ -2997,14 +3001,14 @@ function Layout.Divider(parent)
     parent = LayoutTarget(parent)
     local wrap = LayoutCreate("Frame", parent, {
         Name = "Divider",
-        Size = UDim2.new(1, 0, 0, 21),
+        Size = UDim2.new(1, 0, 0, 24),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
     })
     LayoutCreate("Frame", wrap, {
         Name = "Line",
         Size = UDim2.new(1, 0, 0, 1),
-        Position = UDim2.new(0, 0, 0, 10),
+        Position = UDim2.new(0, 0, 0, 12),
         BackgroundColor3 = Theme.colors.line,
         BackgroundTransparency = 0.35,
         BorderSizePixel = 0,
@@ -3078,7 +3082,7 @@ function Layout.Card(a, b)
     end
 
     local hasIcon = cfg.icon ~= nil and cfg.icon ~= ""
-    local topHeight = hasIcon and 26 or 18
+    local topHeight = hasIcon and 34 or 20
 
     local top = LayoutCreate("Frame", card, {
         Name = "Heading",
@@ -3092,15 +3096,20 @@ function Layout.Card(a, b)
     if hasIcon then
         local tile = LayoutCreate("Frame", top, {
             Name = "IconTile",
-            Size = UDim2.fromOffset(26, 26),
-            Position = UDim2.new(0, 0, 0, 0),
+            Size = UDim2.fromOffset(30, 30),
+            Position = UDim2.new(0, 0, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
             BackgroundColor3 = Theme.colors.hover,
             BackgroundTransparency = 0,
             BorderSizePixel = 0,
         })
-        Util.Corner(tile, 7)
+        Util.Corner(tile, Theme.radius.sm)
         LayoutStroke(tile, 0.55)
-        Icons.Draw(tile, cfg.icon, 14, Theme.colors.text, 2)
+        local icon = Icons.Draw(tile, cfg.icon, 16, Theme.colors.text, 2)
+        if icon then
+            icon.AnchorPoint = Vector2.new(0.5, 0.5)
+            icon.Position = UDim2.new(0.5, 0, 0.5, 0)
+        end
         textX = 34
     end
 
@@ -3111,10 +3120,10 @@ function Layout.Card(a, b)
 
     LayoutText(top, {
         Name = "CardTitle",
-        Size = UDim2.new(1, -(textX + titleRight), 0, topHeight),
-        Position = UDim2.new(0, textX, 0, 0),
+        Size = UDim2.new(1, -(textX + titleRight), 0, 20),
+        Position = UDim2.new(0, textX, 0, hasIcon and 7 or 0),
         Text = tostring(cfg.title or ""),
-        TextSize = 12,
+        TextSize = 13,
         Font = Theme.fonts.bold,
         TextColor3 = Theme.colors.text,
         TextWrapped = false,
@@ -3125,7 +3134,7 @@ function Layout.Card(a, b)
     if actionCfg then
         local action = LayoutCreate("TextButton", top, {
             Name = "CardAction",
-            Size = UDim2.fromOffset(74, 24),
+            Size = UDim2.fromOffset(84, 28),
             Position = UDim2.new(1, 0, 0.5, 0),
             AnchorPoint = Vector2.new(1, 0.5),
             BackgroundColor3 = Theme.colors.raised,
@@ -3133,12 +3142,12 @@ function Layout.Card(a, b)
             BorderSizePixel = 0,
             Text = tostring(actionCfg.text or "Open"),
             Font = Theme.fonts.medium,
-            TextSize = 9,
+            TextSize = 11,
             TextColor3 = Theme.colors.muted,
             TextTruncate = Enum.TextTruncate.AtEnd,
             AutoButtonColor = false,
         })
-        Util.Corner(action, 7)
+        Util.Corner(action, Theme.radius.sm)
         LayoutStroke(action, 0.55)
         Util.Hover(action, Theme.colors.raised, Theme.colors.hover)
         Util.Press(action)
@@ -3158,14 +3167,14 @@ function Layout.Card(a, b)
             LayoutOrder = 2,
         })
         LayoutCreate("UIPadding", bodyWrap, {
-            PaddingTop = UDim.new(0, 8),
+            PaddingTop = UDim.new(0, 10),
         })
         local body = LayoutText(bodyWrap, {
             Name = "CardBody",
             Size = UDim2.new(1, 0, 0, 0),
             AutomaticSize = Enum.AutomaticSize.Y,
             Text = tostring(bodyText),
-            TextSize = 10,
+            TextSize = 12,
             TextColor3 = Theme.colors.muted,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -3214,7 +3223,7 @@ function Layout.Section(tab, cfg)
 
     local header = LayoutCreate("Frame", card, {
         Name = "Header",
-        Size = UDim2.new(1, 0, 0, 44),
+        Size = UDim2.new(1, 0, 0, 58),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         LayoutOrder = 1,
@@ -3224,15 +3233,20 @@ function Layout.Section(tab, cfg)
     if cfg.icon and cfg.icon ~= "" then
         iconTile = LayoutCreate("Frame", header, {
             Name = "IconTile",
-            Size = UDim2.fromOffset(26, 26),
-            Position = UDim2.new(0, pad, 0, 9),
+            Size = UDim2.fromOffset(30, 30),
+            Position = UDim2.new(0, pad, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
             BackgroundColor3 = Theme.colors.hover,
             BackgroundTransparency = 0,
             BorderSizePixel = 0,
         })
-        Util.Corner(iconTile, 7)
+        Util.Corner(iconTile, Theme.radius.sm)
         LayoutStroke(iconTile, 0.55)
-        Icons.Draw(iconTile, cfg.icon, 14, Theme.colors.text, 2)
+        local icon = Icons.Draw(iconTile, cfg.icon, 16, Theme.colors.text, 2)
+        if icon then
+            icon.AnchorPoint = Vector2.new(0.5, 0.5)
+            icon.Position = UDim2.new(0.5, 0, 0.5, 0)
+        end
     end
 
     local subtitleText = cfg.subtitle
@@ -3256,15 +3270,15 @@ function Layout.Section(tab, cfg)
         badgeText = nil
     end
 
-    local textX = pad + (iconTile and 36 or 0)
-    local badgeReserve = (badgeText and 96 or pad)
+    local textX = pad + (iconTile and 40 or 0)
+    local badgeReserve = (badgeText and 104 or pad)
 
     local title = LayoutText(header, {
         Name = "Title",
-        Size = UDim2.new(1, -(textX + badgeReserve), 0, 14),
-        Position = UDim2.new(0, textX, 0, subtitleText and 8 or 15),
+        Size = UDim2.new(1, -(textX + badgeReserve), 0, 18),
+        Position = UDim2.new(0, textX, 0, subtitleText and 9 or 20),
         Text = tostring(cfg.title or "Section"),
-        TextSize = 12,
+        TextSize = 13,
         Font = Theme.fonts.bold,
         TextColor3 = Theme.colors.text,
         TextWrapped = false,
@@ -3276,11 +3290,11 @@ function Layout.Section(tab, cfg)
     if subtitleText then
         subtitle = LayoutText(header, {
             Name = "Subtitle",
-            Size = UDim2.new(1, -(textX + badgeReserve), 0, 11),
-            Position = UDim2.new(0, textX, 0, 24),
+            Size = UDim2.new(1, -(textX + badgeReserve), 0, 15),
+            Position = UDim2.new(0, textX, 0, 31),
             Text = tostring(subtitleText),
-            TextSize = 9,
-            Font = Theme.fonts.mono,
+            TextSize = 11,
+            Font = Theme.fonts.regular,
             TextColor3 = Theme.colors.dim,
             TextWrapped = false,
             TextTruncate = Enum.TextTruncate.AtEnd,
@@ -3299,7 +3313,7 @@ function Layout.Section(tab, cfg)
             BackgroundColor3 = Theme.colors.hover,
             BackgroundTransparency = 0,
             Text = tostring(badgeText),
-            TextSize = 8,
+            TextSize = 9,
             Font = Theme.fonts.mono,
             TextColor3 = Theme.colors.muted,
             TextXAlignment = Enum.TextXAlignment.Center,
@@ -3335,15 +3349,15 @@ function Layout.Section(tab, cfg)
     local contentPadding = LayoutCreate("UIPadding", content, {
         PaddingLeft = UDim.new(0, pad),
         PaddingRight = UDim.new(0, pad),
-        PaddingTop = UDim.new(0, 8),
-        PaddingBottom = UDim.new(0, 10),
+        PaddingTop = UDim.new(0, 12),
+        PaddingBottom = UDim.new(0, 14),
     })
 
     local contentLayout = LayoutCreate("UIListLayout", content, {
         FillDirection = Enum.FillDirection.Vertical,
         HorizontalAlignment = Enum.HorizontalAlignment.Left,
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 0),
+            Padding = UDim.new(0, 0),
     })
 
     local section = setmetatable({
@@ -3373,17 +3387,17 @@ function Layout.Section(tab, cfg)
         contentPadding.PaddingRight = UDim.new(0, currentPad)
 
         if iconTile then
-            iconTile.Position = UDim2.new(0, currentPad, 0, 9)
+            iconTile.Position = UDim2.new(0, currentPad, 0.5, 0)
         end
 
-        local currentX = currentPad + (iconTile and 36 or 0)
-        local currentReserve = badge and 96 or currentPad
+        local currentX = currentPad + (iconTile and 40 or 0)
+        local currentReserve = badge and 104 or currentPad
 
-        title.Position = UDim2.new(0, currentX, 0, subtitle and 8 or 15)
-        title.Size = UDim2.new(1, -(currentX + currentReserve), 0, 14)
+        title.Position = UDim2.new(0, currentX, 0, subtitle and 9 or 20)
+        title.Size = UDim2.new(1, -(currentX + currentReserve), 0, 18)
         if subtitle then
-            subtitle.Position = UDim2.new(0, currentX, 0, 24)
-            subtitle.Size = UDim2.new(1, -(currentX + currentReserve), 0, 11)
+            subtitle.Position = UDim2.new(0, currentX, 0, 31)
+            subtitle.Size = UDim2.new(1, -(currentX + currentReserve), 0, 15)
         end
         if badge then
             badge.Position = UDim2.new(1, -currentPad, 0.5, 0)
@@ -3581,7 +3595,7 @@ local FeedbackStacks = {}
 local FeedbackOverlays = {}
 
 local function FeedbackStroke(obj, transparency)
-    Util.Stroke(obj, Theme.colors.line, 1, transparency or Theme.stroke or 0.82)
+    Util.Stroke(obj, Theme.colors.line, 1, transparency or Theme.stroke or 0.62)
 end
 
 local function FeedbackCreate(className, parent, props)
@@ -3599,7 +3613,7 @@ local function FeedbackText(parent, props)
         Font = Theme.fonts.regular,
         Text = "",
         TextColor3 = Theme.colors.muted,
-        TextSize = 10,
+        TextSize = 12,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
         RichText = false,
@@ -3770,9 +3784,9 @@ function Feedback.Notify(window, cfg)
     end
 
     local viewport = Util.Viewport()
-    local width = 300
+    local width = 320
     if Util.IsMobile() then
-        width = math.min(300, math.max(160, viewport.X - 32))
+        width = math.min(320, math.max(180, viewport.X - 32))
     end
     local layerWidth = layer.AbsoluteSize.X
     if layerWidth > 0 and layerWidth < width then
@@ -3803,19 +3817,19 @@ function Feedback.Notify(window, cfg)
         Name = "Card",
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
-        BackgroundColor3 = Theme.colors.raised,
+        BackgroundColor3 = Theme.colors.panel or Theme.colors.raised,
         BackgroundTransparency = 0,
         BorderSizePixel = 0,
         ClipsDescendants = false,
         Position = UDim2.new(0, 12, 0, 0),
     })
-    Util.Corner(card, 10)
+    Util.Corner(card, Theme.radius.lg)
     FeedbackStroke(card)
     FeedbackCreate("UIPadding", card, {
-        PaddingLeft = UDim.new(0, 12),
-        PaddingRight = UDim.new(0, 12),
-        PaddingTop = UDim.new(0, 12),
-        PaddingBottom = UDim.new(0, 12),
+        PaddingLeft = UDim.new(0, 16),
+        PaddingRight = UDim.new(0, 16),
+        PaddingTop = UDim.new(0, 16),
+        PaddingBottom = UDim.new(0, 16),
     })
     FeedbackCreate("UIListLayout", card, {
         FillDirection = Enum.FillDirection.Vertical,
@@ -3826,7 +3840,7 @@ function Feedback.Notify(window, cfg)
 
     local header = FeedbackCreate("Frame", card, {
         Name = "Header",
-        Size = UDim2.new(1, 0, 0, 26),
+        Size = UDim2.new(1, 0, 0, 30),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         LayoutOrder = 1,
@@ -3834,22 +3848,27 @@ function Feedback.Notify(window, cfg)
 
     local tile = FeedbackCreate("Frame", header, {
         Name = "IconTile",
-        Size = UDim2.fromOffset(26, 26),
-        Position = UDim2.new(0, 0, 0, 0),
+        Size = UDim2.fromOffset(30, 30),
+        Position = UDim2.new(0, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0, 0.5),
         BackgroundColor3 = Theme.colors.hover,
         BackgroundTransparency = 0,
         BorderSizePixel = 0,
     })
-    Util.Corner(tile, 7)
+    Util.Corner(tile, Theme.radius.sm)
     FeedbackStroke(tile, 0.55)
-    Icons.Draw(tile, cfg.icon or "dot", 14, Theme.colors.text, 2)
+    local tileIcon = Icons.Draw(tile, cfg.icon or "dot", 16, Theme.colors.text, 2)
+    if tileIcon then
+        tileIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+        tileIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+    end
 
     FeedbackText(header, {
         Name = "Title",
-        Size = UDim2.new(1, -62, 0, 26),
-        Position = UDim2.new(0, 36, 0, 0),
+        Size = UDim2.new(1, -70, 0, 30),
+        Position = UDim2.new(0, 42, 0, 0),
         Text = tostring(cfg.title or "Notification"),
-        TextSize = 11,
+        TextSize = 13,
         Font = Theme.fonts.bold,
         TextColor3 = Theme.colors.text,
         TextWrapped = false,
@@ -3859,16 +3878,20 @@ function Feedback.Notify(window, cfg)
 
     local closeButton = FeedbackCreate("TextButton", header, {
         Name = "Close",
-        Size = UDim2.fromOffset(24, 24),
-        Position = UDim2.new(1, -24, 0, 1),
+        Size = UDim2.fromOffset(28, 28),
+        Position = UDim2.new(1, -28, 0, 1),
         BackgroundColor3 = Theme.colors.hover,
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Text = "",
         AutoButtonColor = false,
     })
-    Util.Corner(closeButton, 6)
-    Icons.Draw(closeButton, "close", 12, Theme.colors.muted, 2)
+    Util.Corner(closeButton, Theme.radius.sm)
+    local closeIcon = Icons.Draw(closeButton, "close", 14, Theme.colors.muted, 2)
+    if closeIcon then
+        closeIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+        closeIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+    end
 
     local closeHover = 0
     FeedbackConnect(state, closeButton.MouseEnter, function()
@@ -3907,14 +3930,14 @@ function Feedback.Notify(window, cfg)
             LayoutOrder = 2,
         })
         FeedbackCreate("UIPadding", bodyWrap, {
-            PaddingTop = UDim.new(0, 6),
+            PaddingTop = UDim.new(0, 8),
         })
         local body = FeedbackText(bodyWrap, {
             Name = "Text",
             Size = UDim2.new(1, 0, 0, 0),
             AutomaticSize = Enum.AutomaticSize.Y,
             Text = tostring(bodyText),
-            TextSize = 9,
+            TextSize = 11,
             TextColor3 = Theme.colors.muted,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -3925,7 +3948,7 @@ function Feedback.Notify(window, cfg)
 
     FeedbackCreate("Frame", card, {
         Name = "ProgressGap",
-        Size = UDim2.new(1, 0, 0, 10),
+        Size = UDim2.new(1, 0, 0, 12),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         LayoutOrder = 3,
@@ -4143,7 +4166,7 @@ function Feedback.Dialog(window, cfg)
 
     local header = dialogGui("Frame", card, {
         Name = "Header",
-        Size = UDim2.new(1, 0, 0, 22),
+        Size = UDim2.new(1, 0, 0, 28),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         LayoutOrder = 1,
@@ -4151,9 +4174,9 @@ function Feedback.Dialog(window, cfg)
 
     FeedbackText(header, {
         Name = "Title",
-        Size = UDim2.new(1, -30, 0, 22),
+        Size = UDim2.new(1, -34, 0, 28),
         Text = tostring(cfg.title or "Confirm"),
-        TextSize = 16,
+        TextSize = 17,
         Font = Theme.fonts.bold,
         TextColor3 = Theme.colors.text,
         TextWrapped = false,
@@ -4163,16 +4186,20 @@ function Feedback.Dialog(window, cfg)
 
     local closeButton = dialogGui("TextButton", header, {
         Name = "Close",
-        Size = UDim2.fromOffset(22, 22),
-        Position = UDim2.new(1, -22, 0, 0),
+        Size = UDim2.fromOffset(28, 28),
+        Position = UDim2.new(1, -28, 0, 0),
         BackgroundColor3 = Theme.colors.hover,
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Text = "",
         AutoButtonColor = false,
     })
-    Util.Corner(closeButton, 6)
-    Icons.Draw(closeButton, "close", 12, Theme.colors.muted, 2)
+    Util.Corner(closeButton, Theme.radius.sm)
+    local dialogCloseIcon = Icons.Draw(closeButton, "close", 14, Theme.colors.muted, 2)
+    if dialogCloseIcon then
+        dialogCloseIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+        dialogCloseIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+    end
 
     local bodyText = cfg.text
     if bodyText == nil then
@@ -4188,14 +4215,14 @@ function Feedback.Dialog(window, cfg)
             LayoutOrder = 2,
         })
         FeedbackCreate("UIPadding", bodyWrap, {
-            PaddingTop = UDim.new(0, 10),
+            PaddingTop = UDim.new(0, 12),
         })
         local body = FeedbackText(bodyWrap, {
             Name = "Text",
             Size = UDim2.new(1, 0, 0, 0),
             AutomaticSize = Enum.AutomaticSize.Y,
             Text = tostring(bodyText),
-            TextSize = 10,
+            TextSize = 12,
             TextColor3 = Theme.colors.muted,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -4206,13 +4233,13 @@ function Feedback.Dialog(window, cfg)
 
     FeedbackCreate("Frame", card, {
         Name = "ActionGap",
-        Size = UDim2.new(1, 0, 0, 18),
+        Size = UDim2.new(1, 0, 0, 16),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         LayoutOrder = 3,
     })
 
-    local buttonHeight = Util.IsMobile() and 42 or 34
+    local buttonHeight = Util.IsMobile() and 46 or 38
     local actions = dialogGui("Frame", card, {
         Name = "Actions",
         Size = UDim2.new(1, 0, 0, buttonHeight),
@@ -4223,7 +4250,7 @@ function Feedback.Dialog(window, cfg)
 
     local confirm = dialogGui("TextButton", actions, {
         Name = "Confirm",
-        Size = UDim2.new(0, 92, 0, buttonHeight),
+        Size = UDim2.new(0, 96, 0, buttonHeight),
         Position = UDim2.new(1, 0, 0, 0),
         AnchorPoint = Vector2.new(1, 0),
         BackgroundColor3 = Theme.colors.white,
@@ -4231,29 +4258,29 @@ function Feedback.Dialog(window, cfg)
         BorderSizePixel = 0,
         Text = tostring(cfg.confirmText or "Confirm"),
         Font = Theme.fonts.medium,
-        TextSize = 10,
+        TextSize = 12,
         TextColor3 = Theme.colors.black,
         TextTruncate = Enum.TextTruncate.AtEnd,
         AutoButtonColor = false,
     })
-    Util.Corner(confirm, 8)
+    Util.Corner(confirm, Theme.radius.md)
 
     local cancel = dialogGui("TextButton", actions, {
         Name = "Cancel",
-        Size = UDim2.new(0, 78, 0, buttonHeight),
-        Position = UDim2.new(1, -100, 0, 0),
+        Size = UDim2.new(0, 84, 0, buttonHeight),
+        Position = UDim2.new(1, -104, 0, 0),
         AnchorPoint = Vector2.new(1, 0),
         BackgroundColor3 = Theme.colors.raised,
         BackgroundTransparency = 0,
         BorderSizePixel = 0,
         Text = tostring(cfg.cancelText or "Cancel"),
         Font = Theme.fonts.medium,
-        TextSize = 10,
+        TextSize = 12,
         TextColor3 = Theme.colors.muted,
         TextTruncate = Enum.TextTruncate.AtEnd,
         AutoButtonColor = false,
     })
-    Util.Corner(cancel, 8)
+    Util.Corner(cancel, Theme.radius.md)
     FeedbackStroke(cancel, 0.55)
 
     local function finish(confirmed)
@@ -4327,7 +4354,7 @@ function Feedback.Dialog(window, cfg)
 
     FeedbackConnect(state, confirm.MouseEnter, function()
         Util.Tween(confirm, {
-            BackgroundColor3 = Color3.fromRGB(226, 226, 230),
+            BackgroundColor3 = Color3.fromRGB(226, 226, 226),
         }, Theme.motion.fast, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     end)
     FeedbackConnect(state, confirm.MouseLeave, function()
@@ -4474,11 +4501,15 @@ function Core.CreateWindow(cfg)
 
     local C = Theme.colors
     local F = Theme.fonts
-    local R = Theme.radius or { sm = 6, md = 9, lg = 12, xl = 16 }
+    local R = Theme.radius or { sm = 8, md = 10, lg = 14, xl = 20 }
     local version = Theme.version or "1.0.0"
     local viewport = Util.Viewport()
     local mobile = Util.IsMobile()
-    local headerHeight = mobile and 54 or 62
+    local headerHeight = mobile and 56 or 60
+    local footerHeight = 30
+    local sidebarWidth = 176
+    local contentHeaderHeight = 58
+    local mobileStripHeight = 48
     local desktopW = math.min(coreLength(cfg.size and cfg.size.X, viewport.X, 760), math.max(1, viewport.X - 16))
     local desktopH = math.min(coreLength(cfg.size and cfg.size.Y, viewport.Y, 500), math.max(1, viewport.Y - 12))
 
@@ -4495,6 +4526,7 @@ function Core.CreateWindow(cfg)
     local targetX = viewport.X / 2
     local targetY = viewport.Y / 2
     local onCloseCallback = nil
+    local frameScale
 
     local function track(conn)
         if conn then
@@ -4533,8 +4565,8 @@ function Core.CreateWindow(cfg)
 
     local function moveWindow(size, position, length, style)
         stopTweens()
-        local sizeTween = Util.Tween(frame, { Size = size }, length, style or Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        local posTween = Util.Tween(frame, { Position = position }, length, style or Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        local sizeTween = size and Util.Tween(frame, { Size = size }, length, style or Enum.EasingStyle.Quint, Enum.EasingDirection.Out) or nil
+        local posTween = position and Util.Tween(frame, { Position = position }, length, style or Enum.EasingStyle.Quint, Enum.EasingDirection.Out) or nil
         if sizeTween then
             table.insert(activeTweens, sizeTween)
         end
@@ -4542,6 +4574,19 @@ function Core.CreateWindow(cfg)
             table.insert(activeTweens, posTween)
         end
         return sizeTween, posTween
+    end
+
+    local function moveWindowVisual(position, length, scale)
+        stopTweens()
+        local posTween = Util.Tween(frame, { Position = position }, length, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        local scaleTween = frameScale and Util.Tween(frameScale, { Scale = scale }, length, Enum.EasingStyle.Quint, Enum.EasingDirection.Out) or nil
+        if posTween then
+            table.insert(activeTweens, posTween)
+        end
+        if scaleTween then
+            table.insert(activeTweens, scaleTween)
+        end
+        return posTween, scaleTween
     end
 
     local screenGui = Util.Create("ScreenGui", {
@@ -4594,7 +4639,7 @@ function Core.CreateWindow(cfg)
     local shadow = Util.Create("Frame", {
         Name = "SynUIShadow",
         BackgroundColor3 = C.black,
-        BackgroundTransparency = 0.55,
+        BackgroundTransparency = 0.68,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
@@ -4602,7 +4647,7 @@ function Core.CreateWindow(cfg)
         ZIndex = 9,
         Parent = screenGui,
     })
-    Util.Corner(shadow, 22)
+    Util.Corner(shadow, 24)
 
     frame = Util.Create("Frame", {
         Name = "SynUIWindow",
@@ -4616,13 +4661,18 @@ function Core.CreateWindow(cfg)
         ZIndex = 10,
         Parent = screenGui,
     })
-    Util.Corner(frame, 16)
-    Util.Stroke(frame, C.line, 1, 0.45)
+    Util.Corner(frame, R.xl)
+    Util.Stroke(frame, C.line, 1, 0.5)
+    frameScale = Util.Create("UIScale", {
+        Name = "SynUIScale",
+        Scale = 1,
+        Parent = frame,
+    })
 
     local header = Util.Create("Frame", {
         Name = "Header",
         BackgroundColor3 = C.surface,
-        BackgroundTransparency = 0.15,
+        BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Size = UDim2.new(1, 0, 0, headerHeight),
         ZIndex = 4,
@@ -4634,7 +4684,7 @@ function Core.CreateWindow(cfg)
         Name = "DragHandle",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 16, 0, 0),
-        Size = UDim2.new(1, -208, 1, 0),
+        Size = UDim2.new(1, -164, 1, 0),
         ZIndex = 5,
         Parent = header,
     })
@@ -4644,12 +4694,12 @@ function Core.CreateWindow(cfg)
         BackgroundColor3 = C.raised,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0.5, -14),
-        Size = UDim2.fromOffset(28, 28),
+        Size = UDim2.fromOffset(30, 30),
         ZIndex = 5,
         Parent = dragHandle,
     })
-    Util.Corner(brandTile, 8)
-    Util.Stroke(brandTile, C.line, 1, 0.55)
+    Util.Corner(brandTile, R.md)
+    Util.Stroke(brandTile, C.line, 1, 0.58)
     local windowIcon = cfg.icon
     if windowIcon == nil or windowIcon == "" or windowIcon == "grid" then
         local brandPositions = {
@@ -4685,68 +4735,36 @@ function Core.CreateWindow(cfg)
 
     local titleLabel = Util.Text(dragHandle, {
         Name = "Title",
-        Text = string.upper(cfg.title or "SYNUI"),
+        Text = tostring(cfg.title or "SYNUI"),
         Font = F.bold,
-        TextSize = 12,
+        TextSize = 15,
         TextColor3 = C.text,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
-        Position = UDim2.new(0, 38, 0, 14),
-        Size = UDim2.new(1, -38, 0, 15),
+        Position = UDim2.new(0, 40, 0, 11),
+        Size = UDim2.new(1, -40, 0, 19),
         ZIndex = 5,
     })
     local subtitleLabel = Util.Text(dragHandle, {
         Name = "Subtitle",
         Text = cfg.subtitle or "CONTROL PANEL",
-        Font = F.mono,
-        TextSize = 9,
-        TextColor3 = C.dim,
+        Font = F.regular,
+        TextSize = 10,
+        TextColor3 = C.muted,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
-        Position = UDim2.new(0, 38, 0, 32),
-        Size = UDim2.new(1, -38, 0, 11),
+        Position = UDim2.new(0, 40, 0, 32),
+        Size = UDim2.new(1, -40, 0, 14),
         ZIndex = 5,
     })
 
-    local pill = Util.Create("Frame", {
-        Name = "StatusPill",
-        BackgroundColor3 = C.raised,
-        BackgroundTransparency = 0.35,
-        BorderSizePixel = 0,
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -176, 0.5, 0),
-        Size = UDim2.fromOffset(86, 22),
-        ZIndex = 5,
-        Parent = header,
-    })
-    Util.Corner(pill, 11)
-    Util.Stroke(pill, C.line, 1, 0.55)
-    local pillDot = Util.Create("Frame", {
-        Name = "Dot",
-        BackgroundColor3 = C.white,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 10, 0.5, -3),
-        Size = UDim2.fromOffset(6, 6),
-        ZIndex = 6,
-        Parent = pill,
-    })
-    Util.Corner(pillDot, 3)
-    local pillLabel = Util.Text(pill, {
-        Name = "Label",
-        Text = "ONLINE",
-        Font = F.mono,
-        TextSize = 8,
-        TextColor3 = C.muted,
-        Position = UDim2.new(0, 22, 0, 0),
-        Size = UDim2.new(1, -26, 1, 0),
-        ZIndex = 6,
-    })
+    local pillDot = nil
 
     local function iconButton(parent, iconName, onActivate)
         local button = Util.Create("TextButton", {
             Name = "IconButton_" .. tostring(iconName),
-            BackgroundColor3 = C.hover,
-            BackgroundTransparency = 1,
+            BackgroundColor3 = C.raised,
+            BackgroundTransparency = 0.2,
             BorderSizePixel = 0,
             Text = "",
             AutoButtonColor = false,
@@ -4755,7 +4773,7 @@ function Core.CreateWindow(cfg)
             ZIndex = 6,
             Parent = parent,
         })
-        Util.Corner(button, 7)
+        Util.Corner(button, R.sm)
         local holder = Util.Create("Frame", {
             Name = "Icon",
             BackgroundTransparency = 1,
@@ -4767,11 +4785,11 @@ function Core.CreateWindow(cfg)
         })
         Icons.Draw(holder, iconName, 14, C.muted, 1.8)
         connect(button.MouseEnter, function()
-            Util.Tween(button, { BackgroundTransparency = 0 }, 0.12)
+            Util.Tween(button, { BackgroundTransparency = 0, BackgroundColor3 = C.hover }, Theme.motion.fast)
             coreSetIconColor(holder, C.text)
         end)
         connect(button.MouseLeave, function()
-            Util.Tween(button, { BackgroundTransparency = 1 }, 0.14)
+            Util.Tween(button, { BackgroundTransparency = 0.2, BackgroundColor3 = C.raised }, Theme.motion.fast)
             coreSetIconColor(holder, C.muted)
         end)
         connect(button.Activated, function()
@@ -4796,7 +4814,7 @@ function Core.CreateWindow(cfg)
         Name = "Body",
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 0, 0, headerHeight),
-        Size = UDim2.new(1, 0, 1, -(headerHeight + 28)),
+        Size = UDim2.new(1, 0, 1, -(headerHeight + footerHeight)),
         ZIndex = 1,
         Parent = frame,
     })
@@ -4805,7 +4823,7 @@ function Core.CreateWindow(cfg)
         Name = "Sidebar",
         BackgroundColor3 = C.bg,
         BorderSizePixel = 0,
-        Size = UDim2.new(0, 196, 1, 0),
+        Size = UDim2.new(0, sidebarWidth, 1, 0),
         ClipsDescendants = true,
         Visible = not mobile,
         ZIndex = 2,
@@ -4813,20 +4831,11 @@ function Core.CreateWindow(cfg)
     })
     coreHairline(sidebar, "SidebarLine", UDim2.new(1, -1, 0, 0), UDim2.new(0, 1, 1, 0))
 
-    local navLabel = Util.Text(sidebar, {
-        Name = "NavLabel",
-        Text = "WORKSPACE",
-        Font = F.mono,
-        TextSize = 8,
-        TextColor3 = C.faint,
-        Position = UDim2.new(0, 18, 0, 16),
-        Size = UDim2.new(1, -36, 0, 10),
-    })
     local nav = Util.Create("Frame", {
         Name = "Tabs",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 12, 0, 36),
-        Size = UDim2.new(1, -24, 1, -112),
+        Position = UDim2.new(0, 12, 0, 16),
+        Size = UDim2.new(1, -24, 1, -38),
         ClipsDescendants = true,
         ZIndex = 3,
         Parent = sidebar,
@@ -4841,66 +4850,12 @@ function Core.CreateWindow(cfg)
         Parent = nav,
     })
 
-    local connectionPill = Util.Create("Frame", {
-        Name = "ConnectionPill",
-        BackgroundColor3 = C.raised,
-        BackgroundTransparency = 0.35,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 12, 1, -70),
-        Size = UDim2.new(1, -24, 0, 32),
-        ZIndex = 3,
-        Parent = sidebar,
-    })
-    Util.Corner(connectionPill, 8)
-    Util.Stroke(connectionPill, C.line, 1, 0.6)
-    local connectionDot = Util.Create("Frame", {
-        Name = "Dot",
-        BackgroundColor3 = C.white,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 10, 0.5, -3),
-        Size = UDim2.fromOffset(6, 6),
-        ZIndex = 4,
-        Parent = connectionPill,
-    })
-    Util.Corner(connectionDot, 3)
-    Util.Text(connectionPill, {
-        Name = "Label",
-        Text = "CONNECTED",
-        Font = F.mono,
-        TextSize = 8,
-        TextColor3 = C.muted,
-        Position = UDim2.new(0, 22, 0, 0),
-        Size = UDim2.new(1, -60, 1, 0),
-        ZIndex = 4,
-    })
-    Util.Text(connectionPill, {
-        Name = "Live",
-        Text = "LIVE",
-        Font = F.mono,
-        TextSize = 8,
-        TextColor3 = C.faint,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        Position = UDim2.new(0, 0, 0, 0),
-        Size = UDim2.new(1, -10, 1, 0),
-        ZIndex = 4,
-    })
-    Util.Text(sidebar, {
-        Name = "Version",
-        Text = "SYNUI " .. tostring(version),
-        Font = F.mono,
-        TextSize = 8,
-        TextColor3 = C.faint,
-        Position = UDim2.new(0, 14, 1, -32),
-        Size = UDim2.new(1, -28, 0, 14),
-        ZIndex = 3,
-    })
-
     local content = Util.Create("Frame", {
         Name = "Content",
-        BackgroundColor3 = C.bg,
+        BackgroundColor3 = C.surface,
         BorderSizePixel = 0,
-        Position = UDim2.new(0, 196, 0, 0),
-        Size = UDim2.new(1, -196, 1, 0),
+        Position = UDim2.new(0, sidebarWidth, 0, 0),
+        Size = UDim2.new(1, -sidebarWidth, 1, 0),
         ClipsDescendants = true,
         ZIndex = 1,
         Parent = body,
@@ -4908,10 +4863,10 @@ function Core.CreateWindow(cfg)
 
     local contentHeader = Util.Create("Frame", {
         Name = "ContentHeader",
-        BackgroundColor3 = C.bg,
-        BackgroundTransparency = 0.35,
+        BackgroundColor3 = C.surface,
+        BackgroundTransparency = 0,
         BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 54),
+        Size = UDim2.new(1, 0, 0, contentHeaderHeight),
         ZIndex = 2,
         Parent = content,
     })
@@ -4920,44 +4875,31 @@ function Core.CreateWindow(cfg)
         Name = "Title",
         Text = "SYNUI",
         Font = F.bold,
-        TextSize = 16,
+        TextSize = 22,
         TextColor3 = C.text,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
-        Position = UDim2.new(0, 18, 0, 9),
-        Size = UDim2.new(1, -120, 0, 22),
+        Position = UDim2.new(0, 20, 0, 10),
+        Size = UDim2.new(1, -40, 0, 28),
         ZIndex = 3,
     })
     local contentSubtitle = Util.Text(contentHeader, {
         Name = "Subtitle",
         Text = "WORKSPACE",
-        Font = F.mono,
-        TextSize = 9,
-        TextColor3 = C.dim,
+        Font = F.regular,
+        TextSize = 11,
+        TextColor3 = C.muted,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextTruncate = Enum.TextTruncate.AtEnd,
-        Position = UDim2.new(0, 18, 0, 32),
-        Size = UDim2.new(1, -120, 0, 12),
+        Position = UDim2.new(0, 20, 0, 37),
+        Size = UDim2.new(1, -40, 0, 14),
         ZIndex = 3,
     })
-    local contentMeta = Util.Text(contentHeader, {
-        Name = "Meta",
-        Text = "00 / 00",
-        Font = F.mono,
-        TextSize = 8,
-        TextColor3 = C.faint,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        AnchorPoint = Vector2.new(1, 0.5),
-        Position = UDim2.new(1, -18, 0.5, 0),
-        Size = UDim2.fromOffset(80, 12),
-        ZIndex = 3,
-    })
-
     local tabHost = Util.Create("Frame", {
         Name = "TabHost",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 0, 0, 54),
-        Size = UDim2.new(1, 0, 1, -54),
+        Position = UDim2.new(0, 0, 0, contentHeaderHeight),
+        Size = UDim2.new(1, 0, 1, -contentHeaderHeight),
         ClipsDescendants = true,
         ZIndex = 1,
         Parent = content,
@@ -4966,9 +4908,9 @@ function Core.CreateWindow(cfg)
     local strip = Util.Create("Frame", {
         Name = "TabStrip",
         BackgroundColor3 = C.surface,
-        BackgroundTransparency = 0.15,
+        BackgroundTransparency = 0,
         BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 42),
+        Size = UDim2.new(1, 0, 0, mobileStripHeight),
         Visible = mobile,
         ZIndex = 3,
         Parent = body,
@@ -5002,11 +4944,11 @@ function Core.CreateWindow(cfg)
     local footer = Util.Create("Frame", {
         Name = "Footer",
         BackgroundColor3 = C.surface,
-        BackgroundTransparency = 0.1,
+        BackgroundTransparency = 1,
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0, 1),
         Position = UDim2.new(0, 0, 1, 0),
-        Size = UDim2.new(1, 0, 0, 28),
+        Size = UDim2.new(1, 0, 0, footerHeight),
         ZIndex = 5,
         Parent = frame,
     })
@@ -5015,7 +4957,7 @@ function Core.CreateWindow(cfg)
         Name = "Brand",
         Text = "SYNUI / " .. tostring(version),
         Font = F.mono,
-        TextSize = 8,
+        TextSize = 9,
         TextColor3 = C.faint,
         Position = UDim2.new(0, 16, 0, 0),
         Size = UDim2.new(0.5, -16, 1, 0),
@@ -5026,7 +4968,7 @@ function Core.CreateWindow(cfg)
         BackgroundTransparency = 1,
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -16, 0.5, 0),
-        Size = UDim2.new(0, 240, 1, 0),
+        Size = UDim2.new(0, 200, 1, 0),
         ZIndex = 6,
         Parent = footer,
     })
@@ -5053,7 +4995,7 @@ function Core.CreateWindow(cfg)
         Name = "Text",
         Text = "READY",
         Font = F.mono,
-        TextSize = 8,
+        TextSize = 9,
         TextColor3 = C.muted,
         TextXAlignment = Enum.TextXAlignment.Right,
         AutomaticSize = Enum.AutomaticSize.X,
@@ -5077,7 +5019,7 @@ function Core.CreateWindow(cfg)
         BackgroundTransparency = 1,
         AnchorPoint = Vector2.new(1, 0),
         Position = UDim2.new(1, -16, 0, 16),
-        Size = UDim2.new(0, 300, 1, -32),
+        Size = UDim2.new(0, 320, 1, -32),
         ClipsDescendants = false,
         ZIndex = 200,
         Parent = screenGui,
@@ -5116,7 +5058,7 @@ function Core.CreateWindow(cfg)
             end
         end)
         connect(launcher.MouseEnter, function()
-            Util.Tween(launcher, { BackgroundColor3 = Color3.fromRGB(232, 232, 236) }, 0.12)
+            Util.Tween(launcher, { BackgroundColor3 = C.text }, Theme.motion.fast)
         end)
         connect(launcher.MouseLeave, function()
             Util.Tween(launcher, { BackgroundColor3 = C.white }, 0.14)
@@ -5178,10 +5120,10 @@ function Core.CreateWindow(cfg)
         end)
         if pad then
             pcall(function()
-                pad.PaddingLeft = UDim.new(0, mobile and 10 or 16)
-                pad.PaddingRight = UDim.new(0, mobile and 10 or 16)
-                pad.PaddingTop = UDim.new(0, mobile and 10 or 12)
-                pad.PaddingBottom = UDim.new(0, mobile and 14 or 18)
+                pad.PaddingLeft = UDim.new(0, mobile and 16 or 20)
+                pad.PaddingRight = UDim.new(0, mobile and 16 or 20)
+                pad.PaddingTop = UDim.new(0, mobile and 14 or 16)
+                pad.PaddingBottom = UDim.new(0, mobile and 18 or 22)
             end)
         end
         local list = nil
@@ -5190,15 +5132,19 @@ function Core.CreateWindow(cfg)
         end)
         if list then
             pcall(function()
-                list.Padding = UDim.new(0, mobile and 10 or 12)
+                list.Padding = UDim.new(0, mobile and 12 or 14)
             end)
         end
     end
 
-    local function applyLayout()
+    local function applyLayout(preserveWindow)
         if window._destroyed then
             return
         end
+        stopTweens()
+        pcall(function()
+            frameScale.Scale = 1
+        end)
         local vp = Util.Viewport()
         if not vp or vp.X <= 0 or vp.Y <= 0 then
             vp = Vector2.new(1280, 720)
@@ -5238,7 +5184,11 @@ function Core.CreateWindow(cfg)
         if maxH >= 200 then
             h = math.max(200, h)
         end
-        headerHeight = isMobile and 54 or 62
+        local compactMobile = isMobile and vp.Y <= 480
+        headerHeight = compactMobile and 48 or (isMobile and 56 or 60)
+        contentHeaderHeight = compactMobile and 48 or (isMobile and 54 or 58)
+        mobileStripHeight = compactMobile and 42 or 48
+        footerHeight = compactMobile and 24 or 30
         if window._minimized then
             h = headerHeight
         end
@@ -5249,61 +5199,59 @@ function Core.CreateWindow(cfg)
         targetX = centerPxX
         targetY = centerPxY
 
-        frame.Size = UDim2.fromOffset(w, h)
-        frame.Position = UDim2.fromOffset(centerPxX, centerPxY)
+        if not preserveWindow then
+            frame.Size = UDim2.fromOffset(w, h)
+            frame.Position = UDim2.fromOffset(centerPxX, centerPxY)
+        end
         mobile = isMobile
         window._mobile = isMobile
 
         sidebar.Visible = not isMobile
         strip.Visible = isMobile
         body.Position = UDim2.new(0, 0, 0, headerHeight)
-        body.Size = UDim2.new(1, 0, 1, -(headerHeight + 28))
+        body.Size = UDim2.new(1, 0, 1, -(headerHeight + footerHeight))
         header.Size = UDim2.new(1, 0, 0, headerHeight)
-        content.Position = isMobile and UDim2.new(0, 0, 0, 42) or UDim2.new(0, 196, 0, 0)
-        content.Size = isMobile and UDim2.new(1, 0, 1, -42) or UDim2.new(1, -196, 1, 0)
+        footer.Position = UDim2.new(0, 0, 1, 0)
+        footer.Size = UDim2.new(1, 0, 0, footerHeight)
+        content.Position = isMobile and UDim2.new(0, 0, 0, mobileStripHeight) or UDim2.new(0, sidebarWidth, 0, 0)
+        content.Size = isMobile and UDim2.new(1, 0, 1, -mobileStripHeight) or UDim2.new(1, -sidebarWidth, 1, 0)
+        contentHeader.Size = UDim2.new(1, 0, 0, contentHeaderHeight)
+        tabHost.Position = UDim2.new(0, 0, 0, contentHeaderHeight)
+        tabHost.Size = UDim2.new(1, 0, 1, -contentHeaderHeight)
+        strip.Size = UDim2.new(1, 0, 0, mobileStripHeight)
 
-        local brandSize = isMobile and 26 or 28
+        local brandSize = isMobile and 28 or 30
         brandTile.Size = UDim2.fromOffset(brandSize, brandSize)
         brandTile.Position = UDim2.new(0, 0, 0.5, -brandSize / 2)
-        local titleX = brandSize + (isMobile and 8 or 10)
-        titleLabel.Position = UDim2.new(0, titleX, 0, isMobile and 10 or 14)
-        titleLabel.Size = UDim2.new(1, -titleX, 0, 15)
-        subtitleLabel.Position = UDim2.new(0, titleX, 0, isMobile and 27 or 32)
-        subtitleLabel.Size = UDim2.new(1, -titleX, 0, 11)
-        titleLabel.TextSize = isMobile and 11 or 12
+        local titleX = brandSize + (isMobile and 10 or 12)
+        titleLabel.Position = UDim2.new(0, titleX, 0, isMobile and 11 or 12)
+        titleLabel.Size = UDim2.new(1, -titleX, 0, 20)
+        subtitleLabel.Position = UDim2.new(0, titleX, 0, isMobile and 30 or 32)
+        subtitleLabel.Size = UDim2.new(1, -titleX, 0, 14)
+        titleLabel.TextSize = isMobile and 15 or 16
 
-        local buttonSize = isMobile and 42 or 28
-        local sidePad = isMobile and 10 or 14
+        local buttonSize = isMobile and 44 or 32
+        local sidePad = isMobile and 10 or 16
         local gap = isMobile and 6 or 8
-        local pillW = isMobile and 22 or 86
         closeButton.Size = UDim2.fromOffset(buttonSize, buttonSize)
         minimizeButton.Size = UDim2.fromOffset(buttonSize, buttonSize)
         closeButton.Position = UDim2.new(1, -sidePad, 0.5, 0)
         minimizeButton.Position = UDim2.new(1, -(sidePad + buttonSize + gap), 0.5, 0)
-        pill.Size = UDim2.fromOffset(pillW, 22)
-        pill.Position = UDim2.new(1, -(sidePad + buttonSize * 2 + gap + (isMobile and 6 or 10) + pillW), 0.5, 0)
-        pillLabel.Visible = not isMobile
-        if isMobile then
-            pillDot.Position = UDim2.new(0.5, -3, 0.5, -3)
-        else
-            pillDot.Position = UDim2.new(0, 10, 0.5, -3)
-        end
 
         local leftPad = isMobile and 12 or 16
-        local occupied = sidePad + buttonSize * 2 + gap + (isMobile and 6 or 10) + pillW
+        local occupied = sidePad + buttonSize * 2 + gap + 8
         local handleW = math.max(60, w - occupied - leftPad - 8)
         dragHandle.Position = UDim2.new(0, leftPad, 0, 0)
         dragHandle.Size = UDim2.new(0, handleW, 1, 0)
 
-        contentTitle.Position = UDim2.new(0, isMobile and 12 or 18, 0, 9)
-        contentTitle.Size = UDim2.new(1, isMobile and -24 or -120, 0, 22)
-        contentTitle.TextSize = isMobile and 14 or 16
-        contentSubtitle.Position = UDim2.new(0, isMobile and 12 or 18, 0, 32)
-        contentSubtitle.Size = UDim2.new(1, isMobile and -24 or -120, 0, 12)
-        contentMeta.Visible = not isMobile
-
-        footerStatus.Size = UDim2.new(0, isMobile and 150 or 240, 1, 0)
-        notifyLayer.Size = UDim2.new(0, math.min(300, math.max(140, vp.X - 32)), 1, -32)
+        contentTitle.Position = UDim2.new(0, isMobile and 16 or 20, 0, compactMobile and 7 or 10)
+        contentTitle.Size = UDim2.new(1, isMobile and -32 or -40, 0, compactMobile and 22 or 26)
+        contentTitle.TextSize = compactMobile and 16 or (isMobile and 18 or 22)
+        contentSubtitle.Position = UDim2.new(0, isMobile and 16 or 20, 0, compactMobile and 29 or (isMobile and 35 or 37))
+        contentSubtitle.Size = UDim2.new(1, isMobile and -32 or -40, 0, 14)
+        contentSubtitle.TextSize = compactMobile and 9 or (isMobile and 10 or 11)
+        footerStatus.Size = UDim2.new(0, isMobile and 160 or 200, 1, 0)
+        notifyLayer.Size = UDim2.new(0, math.min(320, math.max(160, vp.X - 32)), 1, -32)
         if launcher then
             launcher.Position = UDim2.new(1, -16, 0, 16)
         end
@@ -5338,13 +5286,13 @@ function Core.CreateWindow(cfg)
             BorderSizePixel = 0,
             Text = "",
             AutoButtonColor = false,
-            Size = UDim2.new(1, 0, 0, 34),
+            Size = UDim2.new(1, 0, 0, 42),
             ClipsDescendants = true,
             LayoutOrder = index,
             ZIndex = 3,
             Parent = nav,
         })
-        Util.Corner(button, 8)
+        Util.Corner(button, R.sm)
         local activeBar = Util.Create("Frame", {
             Name = "ActiveBar",
             BackgroundColor3 = C.white,
@@ -5360,22 +5308,22 @@ function Core.CreateWindow(cfg)
             Name = "Icon",
             BackgroundTransparency = 1,
             AnchorPoint = Vector2.new(0, 0.5),
-            Position = UDim2.new(0, 11, 0.5, 0),
-            Size = UDim2.fromOffset(16, 16),
+            Position = UDim2.new(0, 13, 0.5, 0),
+            Size = UDim2.fromOffset(17, 17),
             ZIndex = 4,
             Parent = button,
         })
-        Icons.Draw(iconHolder, tab.icon, 16, C.muted, 1.8)
+        Icons.Draw(iconHolder, tab.icon, 17, C.muted, 1.8)
         local label = Util.Text(button, {
             Name = "Label",
             Text = tab.name,
             Font = F.medium,
-            TextSize = 11,
+            TextSize = 13,
             TextColor3 = C.muted,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextTruncate = Enum.TextTruncate.AtEnd,
-            Position = UDim2.new(0, 35, 0, 0),
-            Size = UDim2.new(1, -43, 1, 0),
+            Position = UDim2.new(0, 40, 0, 0),
+            Size = UDim2.new(1, -48, 1, 0),
             ZIndex = 4,
         })
         local badge = nil
@@ -5405,7 +5353,7 @@ function Core.CreateWindow(cfg)
             })
             local width = math.max(18, math.min(46, 8 + #tostring(tab.badge) * 5))
             badge.Size = UDim2.fromOffset(width, 14)
-            label.Size = UDim2.new(1, -(43 + width + 8), 1, 0)
+            label.Size = UDim2.new(1, -(48 + width + 8), 1, 0)
         end
 
         local function applyStyle(active)
@@ -5425,12 +5373,12 @@ function Core.CreateWindow(cfg)
         end)
         connect(button.MouseEnter, function()
             if window._activeTab ~= tab then
-                Util.Tween(button, { BackgroundColor3 = C.hover }, 0.12)
+            Util.Tween(button, { BackgroundColor3 = C.hover }, Theme.motion.fast)
             end
         end)
         connect(button.MouseLeave, function()
             if window._activeTab ~= tab then
-                Util.Tween(button, { BackgroundColor3 = C.bg }, 0.14)
+                Util.Tween(button, { BackgroundColor3 = C.bg }, Theme.motion.fast)
             else
                 applyStyle(true)
             end
@@ -5440,12 +5388,12 @@ function Core.CreateWindow(cfg)
     end
 
     local function createMobileTabButton(tab, index)
-        local estimated = 44 + #tostring(tab.name) * 6
-        local width = math.max(88, math.min(150, estimated))
+        local estimated = 56 + #tostring(tab.name) * 7
+        local width = math.max(104, math.min(170, estimated))
         local button = Util.Create("TextButton", {
             Name = "MTab_" .. index,
             BackgroundColor3 = C.surface,
-            BackgroundTransparency = 1,
+            BackgroundTransparency = 0,
             BorderSizePixel = 0,
             Text = "",
             AutoButtonColor = false,
@@ -5454,26 +5402,34 @@ function Core.CreateWindow(cfg)
             ZIndex = 4,
             Parent = stripScroll,
         })
+        Util.Corner(button, R.md)
+        local buttonStroke = Util.Create("UIStroke", {
+            Color = C.line,
+            Thickness = 1,
+            Transparency = 0.85,
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            Parent = button,
+        })
         local iconHolder = Util.Create("Frame", {
             Name = "Icon",
             BackgroundTransparency = 1,
             AnchorPoint = Vector2.new(0, 0.5),
-            Position = UDim2.new(0, 12, 0.5, -1),
-            Size = UDim2.fromOffset(14, 14),
+            Position = UDim2.new(0, 14, 0.5, -1),
+            Size = UDim2.fromOffset(16, 16),
             ZIndex = 5,
             Parent = button,
         })
-        Icons.Draw(iconHolder, tab.icon, 14, C.muted, 1.8)
+        Icons.Draw(iconHolder, tab.icon, 16, C.muted, 1.8)
         local label = Util.Text(button, {
             Name = "Label",
             Text = tab.name,
             Font = F.medium,
-            TextSize = 10,
+            TextSize = 12,
             TextColor3 = C.muted,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextTruncate = Enum.TextTruncate.AtEnd,
-            Position = UDim2.new(0, 31, 0, -1),
-            Size = UDim2.new(1, -38, 1, 0),
+            Position = UDim2.new(0, 38, 0, -1),
+            Size = UDim2.new(1, -48, 1, 0),
             ZIndex = 5,
         })
         local underline = Util.Create("Frame", {
@@ -5481,14 +5437,16 @@ function Core.CreateWindow(cfg)
             BackgroundColor3 = C.white,
             BorderSizePixel = 0,
             AnchorPoint = Vector2.new(0, 1),
-            Position = UDim2.new(0, 9, 1, -1),
-            Size = UDim2.new(1, -18, 0, 2),
+            Position = UDim2.new(0, 10, 1, -1),
+            Size = UDim2.new(1, -20, 0, 2),
             Visible = false,
             ZIndex = 5,
             Parent = button,
         })
         local function applyStyle(active)
-            underline.Visible = active
+            underline.Visible = false
+            button.BackgroundColor3 = active and C.raised or C.surface
+            buttonStroke.Transparency = active and 0.42 or 0.85
             label.TextColor3 = active and C.text or C.muted
             coreSetIconColor(iconHolder, active and C.text or C.muted)
         end
@@ -5584,7 +5542,7 @@ function Core.CreateWindow(cfg)
         if tab.content then
             tab.content.Visible = true
             tab.content.Position = UDim2.new(0, 0, 0, 6)
-            Util.Tween(tab.content, { Position = UDim2.new(0, 0, 0, 0) }, 0.16)
+            Util.Tween(tab.content, { Position = UDim2.new(0, 0, 0, 0) }, Theme.motion.normal)
         end
         if tab._applyStyle then
             tab._applyStyle(true)
@@ -5595,7 +5553,6 @@ function Core.CreateWindow(cfg)
         local index = tabIndexOf(tab) or 1
         contentTitle.Text = tostring(tab.name or "TAB")
         contentSubtitle.Text = tostring(tab.subtitle or "WORKSPACE")
-        contentMeta.Text = string.format("%02d / %02d", index, #window._tabs)
         if tab.mobileButton and stripScroll and mobile then
             local target = 0
             pcall(function()
@@ -5643,18 +5600,18 @@ function Core.CreateWindow(cfg)
             ZIndex = 1,
             Parent = tabHost,
         })
-        Util.Padding(scroll, 16, 0)
+        Util.Padding(scroll, 20, 0)
         local pad = nil
         pcall(function()
             pad = scroll:FindFirstChildOfClass("UIPadding")
         end)
         if pad then
-            pad.PaddingTop = UDim.new(0, 12)
-            pad.PaddingBottom = UDim.new(0, 18)
+            pad.PaddingTop = UDim.new(0, 16)
+            pad.PaddingBottom = UDim.new(0, 22)
         end
         Util.Create("UIListLayout", {
             Name = "SynUIList",
-            Padding = UDim.new(0, 12),
+            Padding = UDim.new(0, 14),
             FillDirection = Enum.FillDirection.Vertical,
             SortOrder = Enum.SortOrder.LayoutOrder,
             HorizontalAlignment = Enum.HorizontalAlignment.Left,
@@ -5706,14 +5663,11 @@ function Core.CreateWindow(cfg)
         motionToken = motionToken + 1
         frame.Visible = true
         shadow.Visible = true
-        frame.Size = UDim2.fromOffset(math.max(1, targetW * 0.96), math.max(1, targetH * 0.96))
-        frame.Position = UDim2.fromOffset(targetX, targetY + 6)
-        moveWindow(
-            UDim2.fromOffset(targetW, targetH),
-            UDim2.fromOffset(targetX, targetY),
-            0.22,
-            Enum.EasingStyle.Quint
-        )
+        frame.Position = UDim2.fromOffset(targetX, targetY + 8)
+        if frameScale then
+            frameScale.Scale = 0.97
+        end
+        moveWindowVisual(UDim2.fromOffset(targetX, targetY), Theme.motion.slow, 1)
     end
 
     local function animateClose()
@@ -5722,27 +5676,8 @@ function Core.CreateWindow(cfg)
         end
         motionToken = motionToken + 1
         local token = motionToken
-        local w, h = 0, 0
-        local ax, ay = 0, 0
-        pcall(function()
-            w = frame.AbsoluteSize.X
-            h = frame.AbsoluteSize.Y
-            ax = frame.AbsolutePosition.X
-            ay = frame.AbsolutePosition.Y
-        end)
-        local cx = ax + w / 2
-        local cy = ay + h / 2
-        targetW = w
-        targetH = h
-        targetX = cx
-        targetY = cy
-        moveWindow(
-            UDim2.fromOffset(math.max(1, w * 0.96), math.max(1, h * 0.96)),
-            UDim2.fromOffset(cx, cy + 6),
-            0.18,
-            Enum.EasingStyle.Quint
-        )
-        task.delay(0.2, function()
+        moveWindowVisual(UDim2.fromOffset(targetX, targetY + 8), Theme.motion.normal, 0.97)
+        task.delay(Theme.motion.normal, function()
             if window._destroyed or token ~= motionToken or window._visible then
                 return
             end
@@ -5780,36 +5715,9 @@ function Core.CreateWindow(cfg)
         window._minimized = false
         setMinimizeIcon("minus")
         body.Visible = true
-        footer.Visible = false
-        local vp = Util.Viewport()
-        local top = frame.AbsolutePosition.Y
-        local w, h
-        if vp.X < 700 then
-            w = vp.X * 0.94
-            h = vp.Y * 0.92
-        else
-            w = coreLength(cfg.size and cfg.size.X, vp.X, 760)
-            h = coreLength(cfg.size and cfg.size.Y, vp.Y, 500)
-        end
-        w = math.min(w, math.max(1, vp.X - 16))
-        h = math.min(h, math.max(1, vp.Y - 12))
-        if vp.X - 16 >= 280 then
-            w = math.max(280, w)
-        end
-        if vp.Y - 12 >= 200 then
-            h = math.max(200, h)
-        end
-        targetW = w
-        targetH = h
-        targetX = Util.Clamp(frame.AbsolutePosition.X + frame.AbsoluteSize.X / 2, w / 2 + 8, vp.X - w / 2 - 8)
-        targetY = Util.Clamp(top + h / 2, h / 2 + 8, vp.Y - h / 2 - 8)
-        moveWindow(UDim2.fromOffset(w, h), UDim2.fromOffset(targetX, targetY), 0.2)
-        task.delay(0.21, function()
-            if window._destroyed or window._minimized or not window._visible then
-                return
-            end
-            footer.Visible = true
-        end)
+        footer.Visible = true
+        applyLayout(true)
+        moveWindow(UDim2.fromOffset(targetW, targetH), UDim2.fromOffset(targetX, targetY), Theme.motion.normal)
     end
 
     local function toggleMinimize()
@@ -5848,8 +5756,6 @@ function Core.CreateWindow(cfg)
                 footer.Visible = true
                 setMinimizeIcon("minus")
             end
-            frame.Size = UDim2.fromOffset(targetW, targetH)
-            frame.Position = UDim2.fromOffset(targetX, targetY)
             applyLayout()
             animateOpen()
             updateLauncher()
@@ -5922,7 +5828,9 @@ function Core.CreateWindow(cfg)
         end
         local dotColor = CoreTones[tone or "ok"] or C.white
         footerDot.BackgroundColor3 = dotColor
-        pillDot.BackgroundColor3 = dotColor
+        if pillDot then
+            pillDot.BackgroundColor3 = dotColor
+        end
         window._status = value
         window._statusTone = tone or "ok"
     end
@@ -5932,7 +5840,7 @@ function Core.CreateWindow(cfg)
             return
         end
         if title ~= nil then
-            titleLabel.Text = string.upper(tostring(title))
+            titleLabel.Text = tostring(title)
             window._title = titleLabel.Text
         end
         if subtitle ~= nil then
@@ -6050,7 +5958,7 @@ end
 ]]
 
 local SynUI = {
-    _VERSION = "1.1.1",
+    _VERSION = "1.3.0",
     Theme = Theme,
     Icons = Icons,
     Util = Util,

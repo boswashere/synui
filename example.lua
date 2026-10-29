@@ -21,7 +21,7 @@ local SynUI = loadstring(game:HttpGet(SOURCE))()
 -- SYNUI tries gethui(), then falls back to PlayerGui if parenting fails.
 local window = SynUI:CreateWindow({
     title = "SYNUI DEMO",
-    subtitle = "EXAMPLE SCRIPT",
+    subtitle = "CONTROL PANEL",
     icon = "grid",
     size = UDim2.fromOffset(720, 480),
     toggleKey = Enum.KeyCode.RightShift,
@@ -29,20 +29,30 @@ local window = SynUI:CreateWindow({
 })
 
 local home = window:Tab({
-    name = "Home",
-    icon = "home",
-    subtitle = "Basic controls",
+    name = "Overview",
+    icon = "grid",
+    subtitle = "Session controls",
 })
 
-local main = home:Section({
-    title = "Main",
-    subtitle = "Click something",
+home:Paragraph({
+    text = "A small working example of the SYNUI control panel. Use the tabs to try the controls, then use the launcher or RightShift to hide and show the window.",
+})
+
+home:Card({
+    icon = "spark",
+    title = "Ready to use",
+    body = "Everything in this demo is created by the one-file library. The controls keep their own state and callbacks stay protected.",
+})
+
+local actions = home:Section({
+    title = "Actions",
+    subtitle = "Try a callback",
     icon = "bolt",
 })
 
 -- Buttons run whatever function you pass in. This one opens a notification
 -- and changes the footer text.
-main:Button({
+actions:Button({
     text = "Say hello",
     description = "Shows a notification",
     icon = "play",
@@ -59,7 +69,19 @@ main:Button({
 })
 
 -- Toggles keep their own state. Get() reads it later.
-local enabled = main:Toggle({
+local controls = window:Tab({
+    name = "Controls",
+    icon = "sliders",
+    subtitle = "Live values",
+})
+
+local controlSection = controls:Section({
+    title = "Settings",
+    subtitle = "Change a value",
+    icon = "settings",
+})
+
+local enabled = controlSection:Toggle({
     text = "Enabled",
     description = "Turn the demo feature on or off",
     value = true,
@@ -69,7 +91,7 @@ local enabled = main:Toggle({
 })
 
 -- Sliders clamp to min/max and snap to step. The callback receives a number.
-local speed = main:Slider({
+local speed = controlSection:Slider({
     text = "Speed",
     min = 1,
     max = 20,
@@ -82,7 +104,7 @@ local speed = main:Slider({
 })
 
 -- A single dropdown returns the selected string.
-local mode = main:Dropdown({
+local mode = controlSection:Dropdown({
     text = "Mode",
     options = { "Balanced", "Fast", "Quiet" },
     value = "Balanced",
@@ -92,7 +114,19 @@ local mode = main:Dropdown({
 })
 
 -- Text inputs fire when the field loses focus or when Return is pressed.
-local name = main:Input({
+local inputTab = window:Tab({
+    name = "Input",
+    icon = "terminal",
+    subtitle = "Text and keybinds",
+})
+
+local inputSection = inputTab:Section({
+    title = "Identity",
+    subtitle = "Try the fields",
+    icon = "user",
+})
+
+local name = inputSection:Input({
     text = "Name",
     placeholder = "Type something",
     callback = function(value)
@@ -107,7 +141,7 @@ local name = main:Input({
 })
 
 -- Click the key pill, then press a key. Escape cancels capture.
-local bind = main:Keybind({
+local bind = inputSection:Keybind({
     text = "Toggle key",
     value = Enum.KeyCode.RightShift,
     callback = function(key)
@@ -120,7 +154,7 @@ local bind = main:Keybind({
 })
 
 -- Get() works on every control above. This button reads them all at once.
-main:Button({
+inputSection:Button({
     text = "Read values",
     description = "Shows the current control state",
     icon = "activity",
