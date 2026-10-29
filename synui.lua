@@ -2,7 +2,7 @@
 -- One monochrome palette, one radius scale, one motion vocabulary.
 
 local Theme = {
-	version = "1.3.1",
+	version = "1.4.0",
 
 	colors = {
 		bg = Color3.fromRGB(9, 9, 9),
@@ -434,18 +434,28 @@ function Util.Viewport()
     return Vector2.new(1280, 720)
 end
 
-function Util.IsMobile()
-    local touchFirst = false
+function Util.DisplayScale()
+    local viewport = Util.Viewport()
+    local touchOnly = false
     if UserInputService then
-        local touchOk, touch = pcall(function()
-            return UserInputService.TouchEnabled
+        pcall(function()
+            touchOnly = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
         end)
-        local mouseOk, mouse = pcall(function()
-            return UserInputService.MouseEnabled
-        end)
-        touchFirst = touchOk and touch == true and (not mouseOk or mouse == false)
     end
-    return touchFirst or Util.Viewport().X < 700
+    if not touchOnly then
+        return 1
+    end
+    return Util.Clamp(math.min(viewport.X, viewport.Y) / 640, 1, 2)
+end
+
+function Util.IsMobile()
+    local viewport = Util.Viewport()
+    if not viewport or not viewport.X or not viewport.Y then
+        return true
+    end
+    -- Touch capability alone is not a reliable proxy for available layout
+    -- space. A landscape phone/tablet keeps the wide navigation rail.
+    return viewport.X / Util.DisplayScale() < 700 or viewport.Y > viewport.X * 1.05
 end
 
 function Util.ParentOf(obj)
@@ -973,6 +983,10 @@ defs.search = {
 	{ "line", 16, 16, 21, 21 },
 }
 
+defs.maximize = {
+	{ "rect", 5, 5, 14, 14, 1.2 },
+}
+
 defs.close = {
 	{ "line", 6, 6, 18, 18 },
 	{ "line", 18, 6, 6, 18 },
@@ -1430,7 +1444,6 @@ function Icons.Draw(parent, name, size, color, thickness)
 end
 
 
-
 --[[
     SYNUI — controls
     Row-based primitives built into a section's content frame.
@@ -1510,7 +1523,7 @@ local function fieldRow(section, cfg, fieldHeight)
         Position = UDim2.new(0, 0, 0, 0),
         Size = UDim2.new(1, 0, 0, labelH),
         Font = Theme.fonts.medium,
-        TextSize = 14,
+        TextSize = 16,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1524,7 +1537,7 @@ local function fieldRow(section, cfg, fieldHeight)
             Position = UDim2.new(0, 0, 0, labelH),
             Size = UDim2.new(1, 0, 0, descH),
             Font = Theme.fonts.regular,
-            TextSize = 12,
+            TextSize = 13,
             TextColor3 = DIM,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
@@ -1603,8 +1616,8 @@ function Controls.Button(section, cfg)
     local top = 0
     local labelH = buttonH
     if hasDesc then
-        labelH = 16
-        top = math.max(4, math.floor((buttonH - 34) / 2))
+        labelH = 20
+        top = math.max(4, math.floor((buttonH - 38) / 2))
     end
 
     local label = Util.Text(button, {
@@ -1612,7 +1625,7 @@ function Controls.Button(section, cfg)
         Position = UDim2.new(0, left, 0, top),
         Size = UDim2.new(1, -(left + right), 0, labelH),
         Font = Theme.fonts.medium,
-        TextSize = 14,
+        TextSize = 16,
         TextColor3 = primary and Theme.colors.black or TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1624,10 +1637,10 @@ function Controls.Button(section, cfg)
     if hasDesc then
         descLabel = Util.Text(button, {
             Text = cfg.description,
-            Position = UDim2.new(0, left, 0, top + 18),
-            Size = UDim2.new(1, -(left + right), 0, 14),
+            Position = UDim2.new(0, left, 0, top + 22),
+            Size = UDim2.new(1, -(left + right), 0, 16),
             Font = Theme.fonts.regular,
-            TextSize = 12,
+            TextSize = 13,
             TextColor3 = primary and Theme.colors.black or DIM,
             TextTransparency = primary and 0.35 or 0,
             TextXAlignment = Enum.TextXAlignment.Left,
@@ -1713,7 +1726,7 @@ function Controls.Toggle(section, cfg)
         Position = UDim2.new(0, 0, 0, top),
         Size = UDim2.new(1, -labelW, 0, labelH),
         Font = Theme.fonts.medium,
-        TextSize = 14,
+        TextSize = 16,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -1727,7 +1740,7 @@ function Controls.Toggle(section, cfg)
             Position = UDim2.new(0, 0, 0, top + labelH + 2),
             Size = UDim2.new(1, -labelW, 0, descH),
             Font = Theme.fonts.regular,
-            TextSize = 12,
+            TextSize = 13,
             TextColor3 = DIM,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
@@ -1865,7 +1878,7 @@ function Controls.Slider(section, cfg)
         Position = UDim2.new(0, 0, 0, 2),
         Size = UDim2.new(1, -118, 0, 20),
         Font = Theme.fonts.medium,
-        TextSize = 14,
+        TextSize = 16,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -2092,7 +2105,7 @@ function Controls.Dropdown(section, cfg)
         Position = UDim2.new(0, 12, 0, 0),
         Size = UDim2.new(1, -42, 1, 0),
         Font = Theme.fonts.medium,
-        TextSize = 13,
+        TextSize = 14,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -2253,7 +2266,7 @@ function Controls.Dropdown(section, cfg)
                 Position = UDim2.new(0, 10, 0, 0),
                 Size = UDim2.new(1, -36, 1, 0),
                 Font = Theme.fonts.regular,
-                TextSize = 12,
+                TextSize = 14,
                 TextColor3 = MUTED,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 TextYAlignment = Enum.TextYAlignment.Center,
@@ -2478,7 +2491,7 @@ function Controls.Input(section, cfg)
         Text = cfg.value ~= nil and tostring(cfg.value) or "",
         TextColor3 = TEXT,
         Font = Theme.fonts.regular,
-        TextSize = 13,
+        TextSize = 14,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
         PlaceholderText = cfg.placeholder or "",
@@ -2601,7 +2614,7 @@ function Controls.Keybind(section, cfg)
         Position = UDim2.new(0, 0, 0, top),
         Size = UDim2.new(1, -reserve, 0, labelH),
         Font = Theme.fonts.medium,
-        TextSize = 14,
+        TextSize = 16,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -2615,7 +2628,7 @@ function Controls.Keybind(section, cfg)
             Position = UDim2.new(0, 0, 0, top + labelH + 2),
             Size = UDim2.new(1, -reserve, 0, descH),
             Font = Theme.fonts.regular,
-            TextSize = 12,
+            TextSize = 13,
             TextColor3 = DIM,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
@@ -2789,7 +2802,7 @@ function Controls.Progress(section, cfg)
         Position = UDim2.new(0, 0, 0, 2),
         Size = UDim2.new(1, -72, 0, 20),
         Font = Theme.fonts.medium,
-        TextSize = 14,
+        TextSize = 16,
         TextColor3 = TEXT,
         TextXAlignment = Enum.TextXAlignment.Left,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -3216,13 +3229,10 @@ function Layout.Section(tab, cfg)
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundColor3 = Theme.colors.raised,
-        BackgroundTransparency = 0,
+        BackgroundTransparency = 1,
         BorderSizePixel = 0,
         ClipsDescendants = false,
     })
-    Util.Corner(card, Theme.radius.lg)
-    LayoutStroke(card)
-
     local cardLayout = LayoutCreate("UIListLayout", card, {
         FillDirection = Enum.FillDirection.Vertical,
         HorizontalAlignment = Enum.HorizontalAlignment.Left,
@@ -3234,7 +3244,7 @@ function Layout.Section(tab, cfg)
 
     local header = LayoutCreate("Frame", card, {
         Name = "Header",
-        Size = UDim2.new(1, 0, 0, 58),
+        Size = UDim2.new(1, 0, 0, (cfg.subtitle or cfg.description) and 60 or 42),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
         LayoutOrder = 1,
@@ -3248,11 +3258,10 @@ function Layout.Section(tab, cfg)
             Position = UDim2.new(0, pad, 0.5, 0),
             AnchorPoint = Vector2.new(0, 0.5),
             BackgroundColor3 = Theme.colors.hover,
-            BackgroundTransparency = 0,
+            BackgroundTransparency = 1,
             BorderSizePixel = 0,
         })
         Util.Corner(iconTile, Theme.radius.sm)
-        LayoutStroke(iconTile, 0.55)
         local icon = Icons.Draw(iconTile, cfg.icon, 16, Theme.colors.text, 2)
         if icon then
             icon.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -3289,9 +3298,9 @@ function Layout.Section(tab, cfg)
         Size = UDim2.new(1, -(textX + badgeReserve), 0, 18),
         Position = UDim2.new(0, textX, 0, subtitleText and 9 or 20),
         Text = tostring(cfg.title or "Section"),
-        TextSize = 13,
-        Font = Theme.fonts.bold,
-        TextColor3 = Theme.colors.text,
+        TextSize = 16,
+        Font = Theme.fonts.medium,
+        TextColor3 = Theme.colors.muted,
         TextWrapped = false,
         TextTruncate = Enum.TextTruncate.AtEnd,
         TextYAlignment = Enum.TextYAlignment.Center,
@@ -3304,7 +3313,7 @@ function Layout.Section(tab, cfg)
             Size = UDim2.new(1, -(textX + badgeReserve), 0, 15),
             Position = UDim2.new(0, textX, 0, 31),
             Text = tostring(subtitleText),
-            TextSize = 11,
+            TextSize = 12,
             Font = Theme.fonts.regular,
             TextColor3 = Theme.colors.dim,
             TextWrapped = false,
@@ -3338,24 +3347,18 @@ function Layout.Section(tab, cfg)
         })
     end
 
-    LayoutCreate("Frame", header, {
-        Name = "Hairline",
-        Size = UDim2.new(1, 0, 0, 1),
-        Position = UDim2.new(0, 0, 1, -1),
-        BackgroundColor3 = Theme.colors.line,
-        BackgroundTransparency = 0.45,
-        BorderSizePixel = 0,
-    })
-
     local content = LayoutCreate("Frame", card, {
         Name = "Content",
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
-        BackgroundTransparency = 1,
+        BackgroundColor3 = Theme.colors.raised,
+        BackgroundTransparency = 0,
         BorderSizePixel = 0,
         ClipsDescendants = false,
         LayoutOrder = 2,
     })
+    Util.Corner(content, Theme.radius.lg)
+    LayoutStroke(content, 0.8)
 
     local contentPadding = LayoutCreate("UIPadding", content, {
         PaddingLeft = UDim.new(0, pad),
@@ -3368,7 +3371,7 @@ function Layout.Section(tab, cfg)
         FillDirection = Enum.FillDirection.Vertical,
         HorizontalAlignment = Enum.HorizontalAlignment.Left,
         SortOrder = Enum.SortOrder.LayoutOrder,
-            Padding = UDim.new(0, 0),
+        Padding = UDim.new(0, 0),
     })
 
     local section = setmetatable({
@@ -3404,8 +3407,8 @@ function Layout.Section(tab, cfg)
         local currentX = currentPad + (iconTile and 40 or 0)
         local currentReserve = badge and 104 or currentPad
 
-        title.Position = UDim2.new(0, currentX, 0, subtitle and 9 or 20)
-        title.Size = UDim2.new(1, -(currentX + currentReserve), 0, 18)
+        title.Position = UDim2.new(0, currentX, 0, subtitle and 7 or 10)
+        title.Size = UDim2.new(1, -(currentX + currentReserve), 0, 22)
         if subtitle then
             subtitle.Position = UDim2.new(0, currentX, 0, 31)
             subtitle.Size = UDim2.new(1, -(currentX + currentReserve), 0, 15)
@@ -3794,17 +3797,6 @@ function Feedback.Notify(window, cfg)
         end
     end
 
-    local viewport = Util.Viewport()
-    local width = 320
-    if Util.IsMobile() then
-        width = math.min(320, math.max(180, viewport.X - 32))
-    end
-    local layerWidth = layer.AbsoluteSize.X
-    if layerWidth > 0 and layerWidth < width then
-        width = layerWidth
-    end
-    width = math.max(160, math.floor(width))
-
     stack.order = stack.order + 1
     local order = stack.order
 
@@ -3816,7 +3808,7 @@ function Feedback.Notify(window, cfg)
 
     local root = FeedbackCreate("Frame", layer, {
         Name = string.format("Notification_%03d", order),
-        Size = UDim2.new(0, width, 0, 0),
+        Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
@@ -4102,16 +4094,9 @@ function Feedback.Dialog(window, cfg)
     record.count = record.count + 1
     overlay.Visible = true
 
-    local viewport = Util.Viewport()
-    local width = 400
-    if Util.IsMobile() then
-        width = math.min(400, math.floor(viewport.X * 0.9))
-    else
-        width = math.min(400, viewport.X - 32)
+    local function dialogWidth()
+        return math.floor(math.max(160, math.min(400, Util.Viewport().X / Util.DisplayScale() - 32)))
     end
-    local maxWidth = math.max(160, viewport.X - 24)
-    width = math.max(160, math.min(width, maxWidth))
-    width = math.floor(width)
 
     local overlayZ = overlay.ZIndex or 100
     -- Each deeper dialog gets its own backdrop above the previous card, so
@@ -4145,7 +4130,7 @@ function Feedback.Dialog(window, cfg)
 
     local card = dialogGui("Frame", overlay, {
         Name = "Dialog",
-        Size = UDim2.new(0, width, 0, 0),
+        Size = UDim2.new(0, dialogWidth(), 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         Position = UDim2.new(0.5, 0, 0.5, 6),
         AnchorPoint = Vector2.new(0.5, 0.5),
@@ -4157,6 +4142,11 @@ function Feedback.Dialog(window, cfg)
     })
     Util.Corner(card, Theme.radius.xl)
     FeedbackStroke(card, 0.68)
+    FeedbackConnect(state, overlay:GetPropertyChangedSignal("Size"), function()
+        if not state.closed then
+            card.Size = UDim2.fromOffset(dialogWidth(), 0)
+        end
+    end)
 
     local scale = FeedbackCreate("UIScale", card, {
         Scale = 0.97,
@@ -4513,16 +4503,16 @@ function Core.CreateWindow(cfg)
     local C = Theme.colors
     local F = Theme.fonts
     local R = Theme.radius or { sm = 8, md = 10, lg = 14, xl = 20 }
-    local version = Theme.version or "1.0.0"
     local viewport = Util.Viewport()
+    local displayScale = Util.DisplayScale()
     local mobile = Util.IsMobile()
-    local headerHeight = mobile and 56 or 60
-    local footerHeight = 30
-    local sidebarWidth = 176
-    local contentHeaderHeight = 58
+    local headerHeight = mobile and 60 or 72
+    local footerHeight = mobile and 44 or 60
+    local sidebarWidth = 88
+    local contentHeaderHeight = 108
     local mobileStripHeight = 48
-    local desktopW = math.min(coreLength(cfg.size and cfg.size.X, viewport.X, 760), math.max(1, viewport.X - 16))
-    local desktopH = math.min(coreLength(cfg.size and cfg.size.Y, viewport.Y, 500), math.max(1, viewport.Y - 12))
+    local desktopW = math.min(coreLength(cfg.size and cfg.size.X, viewport.X, viewport.X * 0.74), math.max(1, viewport.X - 16))
+    local desktopH = math.min(coreLength(cfg.size and cfg.size.Y, viewport.Y, viewport.Y * 0.79), math.max(1, viewport.Y - 12))
 
     local window
     local frame
@@ -4538,6 +4528,7 @@ function Core.CreateWindow(cfg)
     local targetY = viewport.Y / 2
     local onCloseCallback = nil
     local frameScale
+    local restoreGeometry
 
     local function track(conn)
         if conn then
@@ -4666,7 +4657,7 @@ function Core.CreateWindow(cfg)
         BorderSizePixel = 0,
         AnchorPoint = Vector2.new(0.5, 0.5),
         Position = UDim2.new(0.5, 0, 0.5, 0),
-        Size = UDim2.fromOffset(targetW, targetH),
+        Size = UDim2.fromOffset(targetW / displayScale, targetH / displayScale),
         ClipsDescendants = true,
         Active = true,
         ZIndex = 10,
@@ -4676,7 +4667,7 @@ function Core.CreateWindow(cfg)
     Util.Stroke(frame, C.line, 1, 0.5)
     frameScale = Util.Create("UIScale", {
         Name = "SynUIScale",
-        Scale = 1,
+        Scale = displayScale,
         Parent = frame,
     })
 
@@ -4703,6 +4694,7 @@ function Core.CreateWindow(cfg)
     local brandTile = Util.Create("Frame", {
         Name = "BrandMark",
         BackgroundColor3 = C.raised,
+        BackgroundTransparency = 1,
         BorderSizePixel = 0,
         Position = UDim2.new(0, 0, 0.5, -14),
         Size = UDim2.fromOffset(30, 30),
@@ -4710,14 +4702,13 @@ function Core.CreateWindow(cfg)
         Parent = dragHandle,
     })
     Util.Corner(brandTile, R.md)
-    Util.Stroke(brandTile, C.line, 1, 0.58)
     local windowIcon = cfg.icon
     if windowIcon == nil or windowIcon == "" or windowIcon == "grid" then
         local brandPositions = {
-            { 7, 7, 0.05 },
-            { 15, 7, 0.72 },
-            { 7, 15, 0.45 },
-            { 15, 15, 0.86 },
+            { 4, 4, 0.05 },
+            { 18, 4, 0.35 },
+            { 4, 18, 0.2 },
+            { 18, 18, 0.5 },
         }
         for index, spec in ipairs(brandPositions) do
             Util.Create("Frame", {
@@ -4726,7 +4717,7 @@ function Core.CreateWindow(cfg)
                 BackgroundTransparency = spec[3],
                 BorderSizePixel = 0,
                 Position = UDim2.fromOffset(spec[1], spec[2]),
-                Size = UDim2.fromOffset(6, 6),
+                Size = UDim2.fromOffset(10, 10),
                 ZIndex = 6,
                 Parent = brandTile,
             })
@@ -4747,17 +4738,20 @@ function Core.CreateWindow(cfg)
     local titleLabel = Util.Text(dragHandle, {
         Name = "Title",
         Text = tostring(cfg.title or "SYNUI"),
-        Font = F.bold,
-        TextSize = 15,
+        Font = F.medium,
+        TextSize = 24,
         TextColor3 = C.text,
-        TextXAlignment = Enum.TextXAlignment.Left,
+        TextXAlignment = Enum.TextXAlignment.Center,
         TextTruncate = Enum.TextTruncate.AtEnd,
-        Position = UDim2.new(0, 40, 0, 11),
-        Size = UDim2.new(1, -40, 0, 19),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0.5, 0, 0, 32),
         ZIndex = 5,
     })
+    titleLabel.Parent = header
     local subtitleLabel = Util.Text(dragHandle, {
         Name = "Subtitle",
+        Visible = false,
         Text = cfg.subtitle or "CONTROL PANEL",
         Font = F.regular,
         TextSize = 10,
@@ -4769,18 +4763,16 @@ function Core.CreateWindow(cfg)
         ZIndex = 5,
     })
 
-    local pillDot = nil
-
     local function iconButton(parent, iconName, onActivate)
         local button = Util.Create("TextButton", {
             Name = "IconButton_" .. tostring(iconName),
             BackgroundColor3 = C.raised,
-            BackgroundTransparency = 0.2,
+            BackgroundTransparency = 1,
             BorderSizePixel = 0,
             Text = "",
             AutoButtonColor = false,
             AnchorPoint = Vector2.new(1, 0.5),
-            Size = UDim2.fromOffset(28, 28),
+            Size = UDim2.fromOffset(40, 40),
             ZIndex = 6,
             Parent = parent,
         })
@@ -4790,18 +4782,18 @@ function Core.CreateWindow(cfg)
             BackgroundTransparency = 1,
             AnchorPoint = Vector2.new(0.5, 0.5),
             Position = UDim2.new(0.5, 0, 0.5, 0),
-            Size = UDim2.fromOffset(14, 14),
+            Size = UDim2.fromOffset(22, 22),
             ZIndex = 7,
             Parent = button,
         })
-        Icons.Draw(holder, iconName, 14, C.muted, 1.8)
+        Icons.Draw(holder, iconName, 22, C.text, 1.7)
         connect(button.MouseEnter, function()
             Util.Tween(button, { BackgroundTransparency = 0, BackgroundColor3 = C.hover }, Theme.motion.fast)
             coreSetIconColor(holder, C.text)
         end)
         connect(button.MouseLeave, function()
-            Util.Tween(button, { BackgroundTransparency = 0.2, BackgroundColor3 = C.raised }, Theme.motion.fast)
-            coreSetIconColor(holder, C.muted)
+            Util.Tween(button, { BackgroundTransparency = 1, BackgroundColor3 = C.raised }, Theme.motion.fast)
+            coreSetIconColor(holder, C.text)
         end)
         connect(button.Activated, function()
             Util.SafeCallback(onActivate)
@@ -4810,6 +4802,12 @@ function Core.CreateWindow(cfg)
         return button, holder
     end
 
+    local searchButton = iconButton(header, "search", function()
+        if window then window:_toggleSearch() end
+    end)
+    local maximizeButton = iconButton(header, "maximize", function()
+        if window then window:Maximize() end
+    end)
     local minimizeButton, minimizeHolder = iconButton(header, "minus", function()
         if window then
             window:_toggleMinimize()
@@ -4820,6 +4818,30 @@ function Core.CreateWindow(cfg)
             window:_closePressed()
         end
     end)
+
+    local searchInput = Util.Create("TextBox", {
+        Name = "SearchInput",
+        BackgroundColor3 = C.field or C.raised,
+        BackgroundTransparency = 0,
+        BorderSizePixel = 0,
+        ClearTextOnFocus = false,
+        PlaceholderText = "Search tabs",
+        PlaceholderColor3 = C.dim,
+        Text = "",
+        TextColor3 = C.text,
+        TextSize = 14,
+        Font = F.regular,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextTruncate = Enum.TextTruncate.AtEnd,
+        Visible = false,
+        AnchorPoint = Vector2.new(0, 0.5),
+        Position = UDim2.new(0, 72, 0.5, 0),
+        Size = UDim2.fromOffset(220, 38),
+        ZIndex = 7,
+        Parent = header,
+    })
+    Util.Corner(searchInput, R.md)
+    Util.Stroke(searchInput, C.line, 1, 0.25)
 
     local body = Util.Create("Frame", {
         Name = "Body",
@@ -4832,7 +4854,7 @@ function Core.CreateWindow(cfg)
 
     local sidebar = Util.Create("Frame", {
         Name = "Sidebar",
-        BackgroundColor3 = C.bg,
+        BackgroundColor3 = C.surface,
         BorderSizePixel = 0,
         Size = UDim2.new(0, sidebarWidth, 1, 0),
         ClipsDescendants = true,
@@ -4842,21 +4864,26 @@ function Core.CreateWindow(cfg)
     })
     coreHairline(sidebar, "SidebarLine", UDim2.new(1, -1, 0, 0), UDim2.new(0, 1, 1, 0))
 
-    local nav = Util.Create("Frame", {
+    local nav = Util.Create("ScrollingFrame", {
         Name = "Tabs",
         BackgroundTransparency = 1,
-        Position = UDim2.new(0, 12, 0, 16),
-        Size = UDim2.new(1, -24, 1, -38),
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 16, 0, 24),
+        Size = UDim2.new(1, -32, 1, -36),
+        CanvasSize = UDim2.new(),
+        AutomaticCanvasSize = Enum.AutomaticSize.Y,
+        ScrollingDirection = Enum.ScrollingDirection.Y,
+        ScrollBarThickness = 0,
         ClipsDescendants = true,
         ZIndex = 3,
         Parent = sidebar,
     })
     local navList = Util.Create("UIListLayout", {
         Name = "SynUIList",
-        Padding = UDim.new(0, 3),
+        Padding = UDim.new(0, 12),
         FillDirection = Enum.FillDirection.Vertical,
         SortOrder = Enum.SortOrder.LayoutOrder,
-        HorizontalAlignment = Enum.HorizontalAlignment.Left,
+        HorizontalAlignment = Enum.HorizontalAlignment.Center,
         VerticalAlignment = Enum.VerticalAlignment.Top,
         Parent = nav,
     })
@@ -4881,7 +4908,6 @@ function Core.CreateWindow(cfg)
         ZIndex = 2,
         Parent = content,
     })
-    coreHairline(contentHeader, "ContentHeaderLine", UDim2.new(0, 0, 1, -1), UDim2.new(1, 0, 0, 1))
     local contentTitle = Util.Text(contentHeader, {
         Name = "Title",
         Text = "SYNUI",
@@ -4896,7 +4922,7 @@ function Core.CreateWindow(cfg)
     })
     local contentSubtitle = Util.Text(contentHeader, {
         Name = "Subtitle",
-        Text = "WORKSPACE",
+        Text = "",
         Font = F.regular,
         TextSize = 11,
         TextColor3 = C.muted,
@@ -4964,14 +4990,26 @@ function Core.CreateWindow(cfg)
         Parent = frame,
     })
     coreHairline(footer, "FooterLine", UDim2.new(0, 0, 0, 0), UDim2.new(1, 0, 0, 1))
-    Util.Text(footer, {
-        Name = "Brand",
-        Text = "SYNUI / " .. tostring(version),
-        Font = F.mono,
-        TextSize = 9,
-        TextColor3 = C.faint,
-        Position = UDim2.new(0, 16, 0, 0),
-        Size = UDim2.new(0.5, -16, 1, 0),
+    local clockLabel = Util.Text(footer, {
+        Name = "Clock",
+        Text = "",
+        Font = F.regular,
+        TextSize = 14,
+        TextColor3 = C.muted,
+        Position = UDim2.new(0, 24, 0, 0),
+        Size = UDim2.new(0, 100, 1, 0),
+        ZIndex = 6,
+    })
+    local contextLabel = Util.Text(footer, {
+        Name = "Context",
+        Text = tostring(cfg.footer or cfg.subtitle or "Universal interface"),
+        Font = F.regular,
+        TextSize = 14,
+        TextColor3 = C.muted,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextTruncate = Enum.TextTruncate.AtEnd,
+        Position = UDim2.new(0, 132, 0, 0),
+        Size = UDim2.new(1, -264, 1, 0),
         ZIndex = 6,
     })
     local footerStatus = Util.Create("Frame", {
@@ -4979,38 +5017,24 @@ function Core.CreateWindow(cfg)
         BackgroundTransparency = 1,
         AnchorPoint = Vector2.new(1, 0.5),
         Position = UDim2.new(1, -16, 0.5, 0),
-        Size = UDim2.new(0, 200, 1, 0),
+        Size = UDim2.new(0, 112, 1, 0),
         ZIndex = 6,
         Parent = footer,
     })
-    Util.Create("UIListLayout", {
-        Name = "StatusList",
-        Padding = UDim.new(0, 6),
-        FillDirection = Enum.FillDirection.Horizontal,
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        VerticalAlignment = Enum.VerticalAlignment.Center,
-        Parent = footerStatus,
-    })
-    local footerDot = Util.Create("Frame", {
-        Name = "Dot",
-        BackgroundColor3 = C.white,
-        BorderSizePixel = 0,
-        Size = UDim2.fromOffset(5, 5),
-        LayoutOrder = 1,
-        ZIndex = 7,
-        Parent = footerStatus,
-    })
-    Util.Corner(footerDot, 3)
+    local clientName = "Client"
+    if type(identifyexecutor) == "function" then
+        local ok, name = pcall(identifyexecutor)
+        if ok and type(name) == "string" then clientName = name end
+    end
     local footerStatusText = Util.Text(footerStatus, {
         Name = "Text",
-        Text = "READY",
-        Font = F.mono,
-        TextSize = 9,
+        Text = clientName,
+        Font = F.regular,
+        TextSize = 14,
         TextColor3 = C.muted,
         TextXAlignment = Enum.TextXAlignment.Right,
-        AutomaticSize = Enum.AutomaticSize.X,
-        Size = UDim2.new(0, 0, 1, 0),
+        TextTruncate = Enum.TextTruncate.AtEnd,
+        Size = UDim2.new(1, 0, 1, 0),
         LayoutOrder = 2,
         ZIndex = 7,
     })
@@ -5025,6 +5049,7 @@ function Core.CreateWindow(cfg)
         ZIndex = 100,
         Parent = screenGui,
     })
+    local overlayScale = Util.Create("UIScale", {Scale = displayScale, Parent = overlay})
     local notifyLayer = Util.Create("Frame", {
         Name = "NotifyLayer",
         BackgroundTransparency = 1,
@@ -5035,8 +5060,10 @@ function Core.CreateWindow(cfg)
         ZIndex = 200,
         Parent = screenGui,
     })
+    local notifyScale = Util.Create("UIScale", {Scale = displayScale, Parent = notifyLayer})
 
     local launcher = nil
+    local launcherScale = nil
     local launcherHolder = nil
     if cfg.launcher ~= false then
         launcher = Util.Create("TextButton", {
@@ -5053,6 +5080,7 @@ function Core.CreateWindow(cfg)
             Parent = screenGui,
         })
         Util.Corner(launcher, 22)
+        launcherScale = Util.Create("UIScale", {Scale = displayScale, Parent = launcher})
         launcherHolder = Util.Create("Frame", {
             Name = "Icon",
             BackgroundTransparency = 1,
@@ -5090,12 +5118,33 @@ function Core.CreateWindow(cfg)
         _overlay = overlay,
         _tabs = {},
         _activeTab = nil,
+        _columnLayouts = {},
         _mobile = mobile,
         _visible = cfg.visible ~= false,
         _minimized = false,
+        _maximized = false,
+        _searchOpen = false,
         _destroyed = false,
         _connections = connections,
     }
+    local function updateClock()
+        if window._destroyed then
+            return
+        end
+        local ok, value = pcall(function()
+            return os.date("%I:%M %p")
+        end)
+        if ok and value then
+            clockLabel.Text = tostring(value)
+        end
+        task.delay(30, updateClock)
+    end
+    updateClock()
+    connect(searchInput.FocusLost, function()
+        if window and window._searchOpen and searchInput.Text ~= "" then
+            window:Search(searchInput.Text)
+        end
+    end)
     local function syncShadow()
         if not shadow or not frame then
             return
@@ -5103,7 +5152,7 @@ function Core.CreateWindow(cfg)
         pcall(function()
             local size = frame.Size
             local position = frame.Position
-            shadow.Size = UDim2.new(size.X.Scale, size.X.Offset + 16, size.Y.Scale, size.Y.Offset + 16)
+            shadow.Size = UDim2.fromOffset(size.X.Offset * displayScale + 16, size.Y.Offset * displayScale + 16)
             shadow.Position = UDim2.new(position.X.Scale, position.X.Offset, position.Y.Scale, position.Y.Offset + 7)
             shadow.AnchorPoint = frame.AnchorPoint
             shadow.Visible = frame.Visible
@@ -5131,10 +5180,10 @@ function Core.CreateWindow(cfg)
         end)
         if pad then
             pcall(function()
-                pad.PaddingLeft = UDim.new(0, mobile and 16 or 20)
-                pad.PaddingRight = UDim.new(0, mobile and 16 or 20)
-                pad.PaddingTop = UDim.new(0, mobile and 14 or 16)
-                pad.PaddingBottom = UDim.new(0, mobile and 18 or 22)
+                pad.PaddingLeft = UDim.new(0, mobile and 20 or 30)
+                pad.PaddingRight = UDim.new(0, mobile and 20 or 30)
+                pad.PaddingTop = UDim.new(0, 0)
+                pad.PaddingBottom = UDim.new(0, mobile and 20 or 30)
             end)
         end
         local list = nil
@@ -5148,20 +5197,21 @@ function Core.CreateWindow(cfg)
         end
     end
 
-    local function applyLayout(preserveWindow)
+    local function applyLayout(preserveWindow, geometry)
         if window._destroyed then
             return
         end
         stopTweens()
-        pcall(function()
-            frameScale.Scale = 1
-        end)
         local vp = Util.Viewport()
         if not vp or vp.X <= 0 or vp.Y <= 0 then
             vp = Vector2.new(1280, 720)
         end
         local isMobile = Util.IsMobile()
         local centerX, centerY = 0.5, 0.5
+        if not laidOut and not isMobile and not window._maximized then
+            local lowerOffset = math.min(42, vp.Y * 0.08)
+            centerY = (vp.Y * 0.5 + lowerOffset) / vp.Y
+        end
         if laidOut and window._visible then
             local ok, absPos, absSize = pcall(function()
                 return frame.AbsolutePosition, frame.AbsoluteSize
@@ -5176,14 +5226,24 @@ function Core.CreateWindow(cfg)
         end
         centerX = Util.Clamp(centerX, 0, 1)
         centerY = Util.Clamp(centerY, 0, 1)
+        displayScale = Util.DisplayScale()
+        frameScale.Scale = displayScale
+        window._displayScale = displayScale
 
         local w, h
-        if isMobile then
+        if geometry then
+            w, h = geometry.width, geometry.height
+            centerX = geometry.x / math.max(geometry.viewport.X, 1)
+            centerY = geometry.y / math.max(geometry.viewport.Y, 1)
+        elseif window._maximized then
+            w, h = vp.X - 32, vp.Y - 32
+            centerX, centerY = 0.5, 0.5
+        elseif isMobile then
             w = vp.X * 0.94
             h = vp.Y * 0.92
         else
-            w = coreLength(cfg.size and cfg.size.X, vp.X, 760)
-            h = coreLength(cfg.size and cfg.size.Y, vp.Y, 500)
+            w = coreLength(cfg.size and cfg.size.X, vp.X / displayScale, vp.X * 0.74 / displayScale) * displayScale
+            h = coreLength(cfg.size and cfg.size.Y, vp.Y / displayScale, vp.Y * 0.79 / displayScale) * displayScale
         end
         local maxW = math.max(1, vp.X - 16)
         local maxH = math.max(1, vp.Y - 12)
@@ -5195,13 +5255,13 @@ function Core.CreateWindow(cfg)
         if maxH >= 200 then
             h = math.max(200, h)
         end
-        local compactMobile = isMobile and vp.Y <= 480
-        headerHeight = compactMobile and 48 or (isMobile and 56 or 60)
-        contentHeaderHeight = compactMobile and 48 or (isMobile and 54 or 58)
-        mobileStripHeight = compactMobile and 42 or 48
-        footerHeight = compactMobile and 24 or 30
+        local compact = h / displayScale < 400
+        headerHeight = compact and 52 or (isMobile and 60 or 72)
+        contentHeaderHeight = compact and 76 or (isMobile and 90 or 108)
+        mobileStripHeight = 48
+        footerHeight = compact and 36 or (isMobile and 44 or 60)
         if window._minimized then
-            h = headerHeight
+            h = headerHeight * displayScale
         end
         targetW = w
         targetH = h
@@ -5211,7 +5271,7 @@ function Core.CreateWindow(cfg)
         targetY = centerPxY
 
         if not preserveWindow then
-            frame.Size = UDim2.fromOffset(w, h)
+            frame.Size = UDim2.fromOffset(w / displayScale, h / displayScale)
             frame.Position = UDim2.fromOffset(centerPxX, centerPxY)
         end
         mobile = isMobile
@@ -5231,44 +5291,73 @@ function Core.CreateWindow(cfg)
         tabHost.Size = UDim2.new(1, 0, 1, -contentHeaderHeight)
         strip.Size = UDim2.new(1, 0, 0, mobileStripHeight)
 
-        local brandSize = isMobile and 28 or 30
+        local logicalW = w / displayScale
+        local brandSize = isMobile and 28 or 34
         brandTile.Size = UDim2.fromOffset(brandSize, brandSize)
         brandTile.Position = UDim2.new(0, 0, 0.5, -brandSize / 2)
-        local titleX = brandSize + (isMobile and 10 or 12)
-        titleLabel.Position = UDim2.new(0, titleX, 0, isMobile and 11 or 12)
-        titleLabel.Size = UDim2.new(1, -titleX, 0, 20)
-        subtitleLabel.Position = UDim2.new(0, titleX, 0, isMobile and 30 or 32)
-        subtitleLabel.Size = UDim2.new(1, -titleX, 0, 14)
-        titleLabel.TextSize = isMobile and 15 or 16
+        titleLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+        titleLabel.Size = UDim2.new(1, -380, 0, 34)
+        titleLabel.TextSize = compact and 20 or 24
+        if isMobile then
+            titleLabel.AnchorPoint = Vector2.new(0, 0.5)
+            titleLabel.Position = UDim2.new(0, 58, 0.5, 0)
+            titleLabel.Size = UDim2.fromOffset(math.max(20, logicalW - 164), 28)
+            titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            titleLabel.TextSize = 18
+        else
+            titleLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+            titleLabel.TextXAlignment = Enum.TextXAlignment.Center
+        end
 
-        local buttonSize = isMobile and 44 or 32
-        local sidePad = isMobile and 10 or 16
-        local gap = isMobile and 6 or 8
+        local buttonSize = isMobile and 44 or 36
+        local sidePad = isMobile and 8 or 16
+        local gap = 2
         closeButton.Size = UDim2.fromOffset(buttonSize, buttonSize)
         minimizeButton.Size = UDim2.fromOffset(buttonSize, buttonSize)
         closeButton.Position = UDim2.new(1, -sidePad, 0.5, 0)
-        minimizeButton.Position = UDim2.new(1, -(sidePad + buttonSize + gap), 0.5, 0)
+        maximizeButton.Size = UDim2.fromOffset(buttonSize, buttonSize)
+        searchButton.Size = UDim2.fromOffset(buttonSize, buttonSize)
+        maximizeButton.Visible = not isMobile
+        searchButton.Visible = not isMobile
+        maximizeButton.Position = UDim2.new(1, -(sidePad + buttonSize + gap), 0.5, 0)
+        minimizeButton.Position = UDim2.new(1, -(sidePad + (buttonSize + gap) * (isMobile and 1 or 2)), 0.5, 0)
+        searchButton.Position = UDim2.new(1, -(sidePad + (buttonSize + gap) * 3), 0.5, 0)
 
-        local leftPad = isMobile and 12 or 16
-        local occupied = sidePad + buttonSize * 2 + gap + 8
-        local handleW = math.max(60, w - occupied - leftPad - 8)
+        local leftPad = isMobile and 16 or 28
+        local occupied = sidePad + (buttonSize + gap) * (isMobile and 2 or 4)
+        local handleW = math.max(60, logicalW - occupied - leftPad - 8)
         dragHandle.Position = UDim2.new(0, leftPad, 0, 0)
         dragHandle.Size = UDim2.new(0, handleW, 1, 0)
 
-        contentTitle.Position = UDim2.new(0, isMobile and 16 or 20, 0, compactMobile and 7 or 10)
-        contentTitle.Size = UDim2.new(1, isMobile and -32 or -40, 0, compactMobile and 22 or 26)
-        contentTitle.TextSize = compactMobile and 16 or (isMobile and 18 or 22)
-        contentSubtitle.Position = UDim2.new(0, isMobile and 16 or 20, 0, compactMobile and 29 or (isMobile and 35 or 37))
-        contentSubtitle.Size = UDim2.new(1, isMobile and -32 or -40, 0, 14)
-        contentSubtitle.TextSize = compactMobile and 9 or (isMobile and 10 or 11)
-        footerStatus.Size = UDim2.new(0, isMobile and 160 or 200, 1, 0)
-        notifyLayer.Size = UDim2.new(0, math.min(320, math.max(160, vp.X - 32)), 1, -32)
+        local contentPad = isMobile and 20 or 30
+        contentTitle.Position = UDim2.new(0, contentPad, 0, compact and 14 or 28)
+        contentTitle.Size = UDim2.new(1, -contentPad * 2, 0, 32)
+        contentTitle.TextSize = isMobile and 24 or 26
+        contentSubtitle.Position = UDim2.new(0, contentPad, 0, compact and 48 or 65)
+        contentSubtitle.Size = UDim2.new(1, -contentPad * 2, 0, 20)
+        contentSubtitle.TextSize = 14
+        contextLabel.Visible = not isMobile
+        clockLabel.TextSize = isMobile and 12 or 14
+        footerStatusText.TextSize = isMobile and 12 or 14
+        overlayScale.Scale = displayScale
+        overlay.Size = UDim2.fromOffset(vp.X / displayScale, vp.Y / displayScale)
+        notifyScale.Scale = displayScale
+        notifyLayer.Size = UDim2.fromOffset(math.min(320, math.max(160, vp.X / displayScale - 32)), vp.Y / displayScale - 32)
+        notifyLayer.Position = UDim2.new(1, -16 * displayScale, 0, 16 * displayScale)
         if launcher then
-            launcher.Position = UDim2.new(1, -16, 0, 16)
+            launcherScale.Scale = displayScale
+            launcher.Position = UDim2.new(1, -16 * displayScale, 0, 16 * displayScale)
         end
+
+        searchInput.Position = UDim2.new(0, isMobile and 58 or 72, 0.5, 0)
+        searchInput.Size = UDim2.fromOffset(math.max(80, logicalW - (isMobile and 164 or 72) - occupied - 8), isMobile and 36 or 38)
+        searchInput.TextSize = isMobile and 13 or 14
+        searchInput.Visible = window._searchOpen and not isMobile
+        titleLabel.Visible = not searchInput.Visible
 
         for _, tab in ipairs(window._tabs) do
             updateTabPadding(tab)
+            for _, updateColumns in ipairs(tab._columnLayouts or {}) do updateColumns() end
         end
 
         syncShadow()
@@ -5278,6 +5367,115 @@ function Core.CreateWindow(cfg)
 
     local Tab = {}
     Tab.__index = Tab
+
+    local Column = {}
+    Column.__index = Column
+
+    local function columnLayoutMethod(name, layoutFn)
+        Column[name] = function(self, cfg)
+            local object = layoutFn(self, cfg)
+            self._order = self._order + 1
+            object.LayoutOrder = self._order
+            return object
+        end
+    end
+
+    columnLayoutMethod("Card", Layout.Card)
+    columnLayoutMethod("Label", Layout.Label)
+    columnLayoutMethod("Paragraph", Layout.Paragraph)
+    columnLayoutMethod("Divider", Layout.Divider)
+    columnLayoutMethod("Spacer", Layout.Spacer)
+
+    function Column:Section(cfg)
+        local section = Layout.Section(self, cfg)
+        if section then
+            self._order = self._order + 1
+            section.frame.LayoutOrder = self._order
+            section.tab = self._tab
+            section.window = window
+            table.insert(self._tab.sections, section)
+        end
+        return section
+    end
+
+    function Tab:Columns()
+        if self._columns then
+            return self._columns.left, self._columns.right
+        end
+
+        local host = Util.Create("Frame", {
+            Name = "Columns",
+            BackgroundTransparency = 1,
+            BorderSizePixel = 0,
+            Size = UDim2.new(1, 0, 0, 0),
+            AutomaticSize = Enum.AutomaticSize.Y,
+            LayoutOrder = 1,
+            Parent = self.content,
+        })
+        local list = Util.Create("UIListLayout", {
+            Name = "ColumnLayout",
+            FillDirection = Enum.FillDirection.Horizontal,
+            HorizontalAlignment = Enum.HorizontalAlignment.Left,
+            VerticalAlignment = Enum.VerticalAlignment.Top,
+            SortOrder = Enum.SortOrder.LayoutOrder,
+            Padding = UDim.new(0, 12),
+            Parent = host,
+        })
+
+        local function makeColumn(name, order)
+            local frame = Util.Create("Frame", {
+                Name = name,
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                Size = UDim2.new(0.5, -6, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                LayoutOrder = order,
+                Parent = host,
+            })
+            local column = setmetatable({
+                frame = frame,
+                content = frame,
+                window = window,
+                _window = window,
+                _tab = self,
+                _order = 0,
+            }, Column)
+            Util.Create("UIListLayout", {
+                FillDirection = Enum.FillDirection.Vertical,
+                HorizontalAlignment = Enum.HorizontalAlignment.Left,
+                SortOrder = Enum.SortOrder.LayoutOrder,
+                Padding = UDim.new(0, 14),
+                Parent = frame,
+            })
+            return column
+        end
+
+        local left = makeColumn("Left", 1)
+        local right = makeColumn("Right", 2)
+        local function updateColumns()
+            local availableWidth = targetW / displayScale - sidebarWidth - 60
+            local horizontal = not window._mobile and availableWidth >= 600
+            list.FillDirection = horizontal and Enum.FillDirection.Horizontal or Enum.FillDirection.Vertical
+            list.Padding = UDim.new(0, horizontal and 12 or 14)
+            if horizontal then
+                left.frame.Size = UDim2.new(0.5, -6, 0, 0)
+                right.frame.Size = UDim2.new(0.5, -6, 0, 0)
+            else
+                left.frame.Size = UDim2.new(1, 0, 0, 0)
+                right.frame.Size = UDim2.new(1, 0, 0, 0)
+            end
+        end
+        table.insert(self._columnLayouts, updateColumns)
+        self._columns = {
+            host = host,
+            list = list,
+            left = left,
+            right = right,
+            update = updateColumns,
+        }
+        updateColumns()
+        return left, right
+    end
 
     local function tabIndexOf(tab)
         for index, item in ipairs(window._tabs) do
@@ -5293,88 +5491,37 @@ function Core.CreateWindow(cfg)
     local function createDesktopTabButton(tab, index)
         local button = Util.Create("TextButton", {
             Name = "Tab_" .. index,
-            BackgroundColor3 = C.bg,
+            BackgroundColor3 = C.surface,
+            BackgroundTransparency = 1,
             BorderSizePixel = 0,
             Text = "",
             AutoButtonColor = false,
-            Size = UDim2.new(1, 0, 0, 42),
+            Size = UDim2.new(1, 0, 0, 56),
             ClipsDescendants = true,
             LayoutOrder = index,
             ZIndex = 3,
             Parent = nav,
         })
-        Util.Corner(button, R.sm)
-        local activeBar = Util.Create("Frame", {
-            Name = "ActiveBar",
-            BackgroundColor3 = C.white,
-            BorderSizePixel = 0,
-            AnchorPoint = Vector2.new(0, 0.5),
-            Position = UDim2.new(0, 0, 0.5, 0),
-            Size = UDim2.fromOffset(2, 16),
-            Visible = false,
-            ZIndex = 5,
-            Parent = button,
-        })
+        Util.Corner(button, R.md)
         local iconHolder = Util.Create("Frame", {
             Name = "Icon",
             BackgroundTransparency = 1,
-            AnchorPoint = Vector2.new(0, 0.5),
-            Position = UDim2.new(0, 13, 0.5, 0),
-            Size = UDim2.fromOffset(17, 17),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            Size = UDim2.fromOffset(24, 24),
             ZIndex = 4,
             Parent = button,
         })
-        Icons.Draw(iconHolder, tab.icon, 17, C.muted, 1.8)
-        local label = Util.Text(button, {
-            Name = "Label",
-            Text = tab.name,
-            Font = F.medium,
-            TextSize = 13,
-            TextColor3 = C.muted,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextTruncate = Enum.TextTruncate.AtEnd,
-            Position = UDim2.new(0, 40, 0, 0),
-            Size = UDim2.new(1, -48, 1, 0),
-            ZIndex = 4,
-        })
-        local badge = nil
-        local badgeLabel = nil
-        if tab.badge ~= nil and tab.badge ~= false then
-            badge = Util.Create("Frame", {
-                Name = "Badge",
-                BackgroundColor3 = C.raised,
-                BackgroundTransparency = 0.2,
-                BorderSizePixel = 0,
-                AnchorPoint = Vector2.new(1, 0.5),
-                Position = UDim2.new(1, -8, 0.5, 0),
-                Size = UDim2.fromOffset(0, 14),
-                ZIndex = 5,
-                Parent = button,
-            })
-            Util.Corner(badge, 4)
-            badgeLabel = Util.Text(badge, {
-                Name = "Text",
-                Text = tostring(tab.badge),
-                Font = F.mono,
-                TextSize = 8,
-                TextColor3 = C.dim,
-                TextXAlignment = Enum.TextXAlignment.Center,
-                Size = UDim2.new(1, 0, 1, 0),
-                ZIndex = 6,
-            })
-            local width = math.max(18, math.min(46, 8 + #tostring(tab.badge) * 5))
-            badge.Size = UDim2.fromOffset(width, 14)
-            label.Size = UDim2.new(1, -(48 + width + 8), 1, 0)
-        end
+        Icons.Draw(iconHolder, tab.icon, 24, C.muted, 1.8)
+        local buttonStroke = Util.Stroke(button, C.line, 1, 0.9)
 
         local function applyStyle(active)
-            button.BackgroundColor3 = active and C.raised or C.bg
-            activeBar.Visible = active
-            label.TextColor3 = active and C.text or C.muted
-            coreSetIconColor(iconHolder, active and C.text or C.muted)
-            if badgeLabel then
-                badgeLabel.TextColor3 = active and C.muted or C.dim
+            button.BackgroundColor3 = active and C.text or C.surface
+            button.BackgroundTransparency = active and 0 or 1
+            if buttonStroke then
+                buttonStroke.Transparency = active and 1 or 0.9
             end
+            coreSetIconColor(iconHolder, active and C.black or C.muted)
         end
         tab._applyStyle = applyStyle
         applyStyle(false)
@@ -5384,12 +5531,18 @@ function Core.CreateWindow(cfg)
         end)
         connect(button.MouseEnter, function()
             if window._activeTab ~= tab then
-            Util.Tween(button, { BackgroundColor3 = C.hover }, Theme.motion.fast)
+                Util.Tween(button, {
+                    BackgroundColor3 = C.raised,
+                    BackgroundTransparency = 0,
+                }, Theme.motion.fast)
             end
         end)
         connect(button.MouseLeave, function()
             if window._activeTab ~= tab then
-                Util.Tween(button, { BackgroundColor3 = C.bg }, Theme.motion.fast)
+                Util.Tween(button, {
+                    BackgroundColor3 = C.surface,
+                    BackgroundTransparency = 1,
+                }, Theme.motion.fast)
             else
                 applyStyle(true)
             end
@@ -5593,6 +5746,7 @@ function Core.CreateWindow(cfg)
             badge = tabCfg.badge,
             window = window,
             sections = {},
+            _columnLayouts = {},
         }, Tab)
 
         local scroll = Util.Create("ScrollingFrame", {
@@ -5664,7 +5818,7 @@ function Core.CreateWindow(cfg)
         for _, child in ipairs(minimizeHolder:GetChildren()) do
             child:Destroy()
         end
-        Icons.Draw(minimizeHolder, iconName, 14, C.muted, 1.8)
+        Icons.Draw(minimizeHolder, iconName, 22, C.text, 1.7)
     end
 
     local function animateOpen()
@@ -5676,9 +5830,9 @@ function Core.CreateWindow(cfg)
         shadow.Visible = true
         frame.Position = UDim2.fromOffset(targetX, targetY + 8)
         if frameScale then
-            frameScale.Scale = 0.97
+            frameScale.Scale = displayScale * 0.97
         end
-        moveWindowVisual(UDim2.fromOffset(targetX, targetY), Theme.motion.slow, 1)
+        moveWindowVisual(UDim2.fromOffset(targetX, targetY), Theme.motion.slow, displayScale)
     end
 
     local function animateClose()
@@ -5687,7 +5841,7 @@ function Core.CreateWindow(cfg)
         end
         motionToken = motionToken + 1
         local token = motionToken
-        moveWindowVisual(UDim2.fromOffset(targetX, targetY + 8), Theme.motion.normal, 0.97)
+        moveWindowVisual(UDim2.fromOffset(targetX, targetY + 8), Theme.motion.normal, displayScale * 0.97)
         task.delay(Theme.motion.normal, function()
             if window._destroyed or token ~= motionToken or window._visible then
                 return
@@ -5711,12 +5865,12 @@ function Core.CreateWindow(cfg)
         local vp = Util.Viewport()
         local top = frame.AbsolutePosition.Y
         local w = frame.AbsoluteSize.X
-        local h = headerHeight
+        local h = headerHeight * displayScale
         targetW = w
         targetH = h
         targetX = Util.Clamp(frame.AbsolutePosition.X + w / 2, w / 2 + 8, vp.X - w / 2 - 8)
         targetY = Util.Clamp(top + h / 2, h / 2 + 8, vp.Y - h / 2 - 8)
-        moveWindow(UDim2.fromOffset(w, h), UDim2.fromOffset(targetX, targetY), 0.2)
+        moveWindow(UDim2.fromOffset(w / displayScale, h / displayScale), UDim2.fromOffset(targetX, targetY), Theme.motion.normal)
     end
 
     local function restoreWindow()
@@ -5728,7 +5882,7 @@ function Core.CreateWindow(cfg)
         body.Visible = true
         footer.Visible = true
         applyLayout(true)
-        moveWindow(UDim2.fromOffset(targetW, targetH), UDim2.fromOffset(targetX, targetY), Theme.motion.normal)
+        moveWindow(UDim2.fromOffset(targetW / displayScale, targetH / displayScale), UDim2.fromOffset(targetX, targetY), Theme.motion.normal)
     end
 
     local function toggleMinimize()
@@ -5780,6 +5934,71 @@ function Core.CreateWindow(cfg)
             return
         end
         toggleMinimize()
+    end
+
+    function window:Maximize(value)
+        if window._destroyed or mobile then
+            return window
+        end
+        if window._minimized then
+            restoreWindow()
+        end
+        local shouldMaximize = value
+        if shouldMaximize == nil then
+            shouldMaximize = not window._maximized
+        else
+            shouldMaximize = shouldMaximize and true or false
+        end
+        if shouldMaximize == window._maximized then
+            return window
+        end
+
+        if shouldMaximize then
+            restoreGeometry = {
+                width = targetW,
+                height = targetH,
+                x = targetX,
+                y = targetY,
+                viewport = Util.Viewport(),
+            }
+            window._maximized = true
+            applyLayout(true)
+            moveWindow(
+                UDim2.fromOffset(targetW / displayScale, targetH / displayScale),
+                UDim2.fromOffset(targetX, targetY),
+                Theme.motion.normal
+            )
+        else
+            window._maximized = false
+            local saved = restoreGeometry
+            applyLayout(true, saved)
+            moveWindow(
+                UDim2.fromOffset(targetW / displayScale, targetH / displayScale),
+                UDim2.fromOffset(targetX, targetY),
+                Theme.motion.normal
+            )
+            restoreGeometry = nil
+        end
+        return window
+    end
+
+    function window:_toggleSearch()
+        if window._destroyed or mobile then
+            return
+        end
+        window._searchOpen = not window._searchOpen
+        searchInput.Visible = window._searchOpen
+        titleLabel.Visible = not window._searchOpen
+        if window._searchOpen then
+            pcall(function()
+                searchInput:CaptureFocus()
+            end)
+        else
+            pcall(function()
+                searchInput:ReleaseFocus()
+            end)
+            searchInput.Text = ""
+        end
     end
 
     function window:_closePressed()
@@ -5837,11 +6056,6 @@ function Core.CreateWindow(cfg)
         else
             footerStatusText.TextColor3 = C.muted
         end
-        local dotColor = CoreTones[tone or "ok"] or C.white
-        footerDot.BackgroundColor3 = dotColor
-        if pillDot then
-            pillDot.BackgroundColor3 = dotColor
-        end
         window._status = value
         window._statusTone = tone or "ok"
     end
@@ -5871,6 +6085,25 @@ function Core.CreateWindow(cfg)
 
     function window:GetActiveTab()
         return window._activeTab
+    end
+
+    function window:Search(query)
+        if window._destroyed or query == nil then
+            return false
+        end
+        local needle = string.lower(tostring(query))
+        if needle == "" then
+            return false
+        end
+        for _, tab in ipairs(window._tabs) do
+            local name = string.lower(tostring(tab.name or ""))
+            local subtitle = string.lower(tostring(tab.subtitle or ""))
+            if string.find(name, needle, 1, true) or string.find(subtitle, needle, 1, true) then
+                selectTab(tab)
+                return tab
+            end
+        end
+        return false
     end
 
     function window:Destroy()
@@ -5912,9 +6145,9 @@ function Core.CreateWindow(cfg)
     connect(dragHandle.InputBegan, function()
         stopTweens()
         if frameScale then
-            frameScale.Scale = 1
+            frameScale.Scale = displayScale
         end
-        frame.Size = UDim2.fromOffset(targetW, targetH)
+        frame.Size = UDim2.fromOffset(targetW / displayScale, targetH / displayScale)
     end)
     connect(dragHandle.InputEnded, function()
         local ok, absPos, absSize = pcall(function()
@@ -5946,7 +6179,7 @@ function Core.CreateWindow(cfg)
 
     window._title = titleLabel.Text
     window._subtitle = subtitleLabel.Text
-    window._status = "READY"
+    window._status = clientName
     window._statusTone = "ok"
 
     applyLayout()
@@ -5964,7 +6197,7 @@ end
 
 
 --[[
-    SYNUI 1.3.1
+    SYNUI 1.4.0
     A single-file, dependency-free monochrome interface library for Roblox.
     Embedded SVG path icons, desktop + mobile, keyboard + touch.
 
@@ -5972,7 +6205,7 @@ end
 ]]
 
 local SynUI = {
-    _VERSION = "1.3.1",
+    _VERSION = "1.4.0",
     Theme = Theme,
     Icons = Icons,
     Util = Util,

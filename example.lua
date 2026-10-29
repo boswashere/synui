@@ -18,43 +18,29 @@ local SOURCE = "https://raw.githubusercontent.com/boswashere/synui/refs/heads/ma
 local SynUI = loadstring(game:HttpGet(SOURCE))()
 
 -- Demo body.
--- SYNUI tries gethui(), then falls back to PlayerGui if parenting fails.
+-- SYNUI chooses a renderable GUI root automatically.
 local window = SynUI:CreateWindow({
-    title = "SYNUI DEMO",
-    subtitle = "CONTROL PANEL",
+    title = "SYNUI",
+    footer = "Universal interface",
     icon = "grid",
-    size = UDim2.fromOffset(720, 480),
     toggleKey = Enum.KeyCode.RightShift,
     launcher = true,
 })
 
 local home = window:Tab({
-    name = "Overview",
-    icon = "grid",
-    subtitle = "Session controls",
+    name = "Home",
+    icon = "home",
+    subtitle = "Your controls in one place.",
 })
 
-home:Paragraph({
-    text = "A small working example of the SYNUI control panel. Use the tabs to try the controls, then use the launcher or RightShift to hide and show the window.",
-})
-
-home:Card({
-    icon = "spark",
-    title = "Ready to use",
-    body = "Everything in this demo is created by the one-file library. The controls keep their own state and callbacks stay protected.",
-})
-
-local actions = home:Section({
-    title = "Actions",
-    subtitle = "Try a callback",
-    icon = "bolt",
-})
+local homeLeft, homeRight = home:Columns()
+local actions = homeLeft:Section({title = "Quick actions"})
 
 -- Buttons run whatever function you pass in. This one opens a notification
 -- and changes the footer text.
 actions:Button({
-    text = "Say hello",
-    description = "Shows a notification",
+    text = "Send notification",
+    description = "A small message above the window",
     icon = "play",
     variant = "primary",
     callback = function()
@@ -68,22 +54,36 @@ actions:Button({
     end,
 })
 
+actions:Button({
+    text = "Open dialog",
+    description = "Try the confirmation panel",
+    icon = "layers",
+    callback = function()
+        window:Dialog({title = "Keep this window?", text = "This is a demo confirmation. Your choice appears in the footer.",
+            callback = function(accepted) window:SetStatus(accepted and "Confirmed" or "Cancelled") end})
+    end,
+})
+
+local windowSection = homeRight:Section({title = "Window"})
+windowSection:Button({text = "Hide window", icon = "minus", callback = function() window:Toggle() end})
+windowSection:Button({text = "Open controls", icon = "sliders", callback = function() window:Search("Controls") end})
+
 -- Toggles keep their own state. Get() reads it later.
 local controls = window:Tab({
     name = "Controls",
     icon = "sliders",
-    subtitle = "Live values",
+    subtitle = "Switches, sliders and selections.",
 })
 
-local controlSection = controls:Section({
-    title = "Settings",
-    subtitle = "Change a value",
-    icon = "settings",
+local leftControls, rightControls = controls:Columns()
+
+local controlSection = leftControls:Section({
+    title = "General",
 })
 
 local enabled = controlSection:Toggle({
     text = "Enabled",
-    description = "Turn the demo feature on or off",
+    description = "Enable the example feature",
     value = true,
     callback = function(value)
         window:SetStatus(value and "ON" or "OFF", value and "ok" or "off")
@@ -110,6 +110,29 @@ local mode = controlSection:Dropdown({
     value = "Balanced",
     callback = function(value)
         window:SetStatus(string.upper(value), "ok")
+    end,
+})
+
+local statusSection = rightControls:Section({
+    title = "Session",
+})
+
+statusSection:Button({
+    text = "Read values",
+    description = "Read values with Get()",
+    icon = "activity",
+    callback = function()
+        window:Notify({
+            title = "Current values",
+            text = string.format(
+                "enabled=%s  speed=%s  mode=%s",
+                tostring(enabled:Get()),
+                tostring(speed:Get()),
+                tostring(mode:Get())
+            ),
+            icon = "terminal",
+            duration = 5,
+        })
     end,
 })
 
@@ -153,27 +176,7 @@ local bind = inputSection:Keybind({
     end,
 })
 
--- Get() works on every control above. This button reads them all at once.
-inputSection:Button({
-    text = "Read values",
-    description = "Shows the current control state",
-    icon = "activity",
-    callback = function()
-        window:Notify({
-            title = "Current values",
-            text = string.format(
-                "enabled=%s  speed=%s  mode=%s  name=%s  key=%s",
-                tostring(enabled:Get()),
-                tostring(speed:Get()),
-                tostring(mode:Get()),
-                name:Get() ~= "" and name:Get() or "(empty)",
-                tostring(bind:Get())
-            ),
-            icon = "terminal",
-            duration = 5,
-        })
-    end,
-})
+-- Get() works on every control, so the callbacks can read current values later.
 
 local about = window:Tab({
     name = "About",

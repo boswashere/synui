@@ -1,8 +1,8 @@
 # SYNUI
 
-A single-file, dependency-free, monochrome Roblox UI library with embedded SVG icons, built for desktop and mobile.
+A single-file, dependency-free, monochrome Roblox UI library with embedded vector icons, built for executor loadstrings on desktop and mobile.
 
-SYNUI gives you a compact control panel: a draggable window, tabs, sections, buttons, toggles, sliders, dropdowns, text inputs, keybinds, progress rows, notifications, dialogs, and a floating launcher. The whole library is one Lua file with no external assets and no `HttpService` dependency at runtime.
+SYNUI gives you a wide floating control panel: a draggable window, icon rail, tabs, sections, buttons, toggles, sliders, dropdowns, text inputs, keybinds, progress rows, notifications, dialogs, search, maximize/restore, and a floating launcher. The whole library is one Lua file with no external assets and no `HttpService` dependency at runtime.
 
 ## One-line demo
 
@@ -30,8 +30,8 @@ local SynUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswash
 
 - **One file.** The whole library is `synui.lua`; no packages, asset IDs, or image uploads.
 - **Monochrome by design.** Near-black canvas, graphite surfaces, hairline strokes, white primary actions, gray secondary text.
-- **Desktop and mobile.** Mouse, touch, and keyboard input. Rows grow to touch-friendly sizes and the layout switches to a horizontal tab strip on narrow screens.
-- **Embedded icons.** 30 Lucide-style icons defined as 24×24 SVG path data and drawn as crisp vector Frames.
+- **Desktop and mobile.** Mouse, touch, and keyboard input. Landscape touch screens keep the wide icon rail; portrait and narrow screens use a horizontal tab strip.
+- **Embedded icons.** 31 Lucide-style icons defined as 24×24 SVG path data and drawn as crisp vector Frames.
 - **Keyboard aware.** Global toggle key, Escape-to-cancel keybind capture, and dialogs that close on Escape.
 - **Predictable callbacks.** Every user callback goes through one protected callback path.
 - **Clean teardown.** `window:Destroy()` disconnects connections and removes the `ScreenGui`.
@@ -70,10 +70,11 @@ local window = SynUI:CreateWindow({
     title = "VIBECODE",
     subtitle = "CONTROL PANEL",
     icon = "grid",
-    size = UDim2.fromOffset(760, 500),
+    -- Leave size out for the responsive 74% × 79% desktop default.
     toggleKey = Enum.KeyCode.RightShift,
     parent = nil,            -- nil = renderable gethui() root, else PlayerGui
     launcher = true,         -- floating reopen button
+    footer = "Universal interface",
 })
 
 local tab = window:Tab({ name = "Overview", icon = "grid", subtitle = "Live session" })
@@ -141,7 +142,7 @@ window:SetStatus("SYNCED", "ok")
 
 ## Example
 
-[`demo.lua`](demo.lua) is the self-contained demo used by the one-line loader above. It opens a window, adds two tabs, and wires up every control. There is no second download or nested `loadstring`.
+[`demo.lua`](demo.lua) is the self-contained demo used by the one-line loader above. It opens a responsive window with four tabs of working controls. There is no second download or nested `loadstring`.
 
 [`example.lua`](example.lua) is the readable source for that demo. The comments explain each block. Copy it, run it, then change the pieces you need. It downloads the library itself, so it needs `loadstring` and `game:HttpGet` to work.
 
@@ -156,22 +157,24 @@ local window = SynUI:CreateWindow({
     title = "VIBECODE",
     subtitle = "CONTROL PANEL",
     icon = "grid",
-    size = UDim2.fromOffset(760, 500),
+    -- size = UDim2.fromOffset(900, 500), -- optional logical size
     toggleKey = Enum.KeyCode.RightShift,
     parent = nil,
     launcher = true,
+    footer = "Universal interface",
 })
 ```
 
 | Field | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `title` | string | `"SYNUI"` | Header title. |
-| `subtitle` | string | `""` | Small mono subtitle. |
+| `subtitle` | string | `""` | Fallback for the center footer caption when `footer` is omitted. Tab subtitles are configured separately. |
 | `icon` | string | `"grid"` | Icon name from the icon set. |
-| `size` | `UDim2` | `760×500` | Desktop window size. |
+| `size` | `UDim2` | responsive | Optional landscape size in logical pixels; screen scale applies to offsets. Defaults to about 74% of viewport width and 79% of viewport height. |
 | `toggleKey` | `Enum.KeyCode` | `RightShift` | Global show/hide key. |
 | `parent` | `Instance?` | `nil` | `nil` resolves to a renderable `gethui()` root when available, otherwise `PlayerGui`. |
 | `launcher` | boolean | `true` | Show a floating reopen button while the window is hidden. |
+| `footer` | string | `subtitle` or `"Universal interface"` | Center caption shown in the footer. |
 
 Window methods:
 
@@ -179,6 +182,8 @@ Window methods:
 | --- | --- |
 | `window:Tab(cfg)` | Create a tab. The first tab is selected automatically. |
 | `window:SelectTab(tab)` | Switch to a tab, update the header, and toggle tab visibility. |
+| `window:Search(query)` | Case-insensitively find a tab by name or subtitle, select it, and return the tab; returns `false` for no match. |
+| `window:Maximize([bool])` | Toggle maximize/restore, or set the state explicitly on the desktop layout. |
 | `window:SetStatus(text, tone)` | Update the footer status. `tone` is `"ok"`, `"warn"`, or `"off"`; all are monochrome. |
 | `window:SetVisible(bool)` | Show or hide the window. The launcher appears while hidden. |
 | `window:Toggle()` | Flip the current visibility. |
@@ -186,7 +191,9 @@ Window methods:
 | `window:Dialog(cfg)` | Open a modal confirmation dialog. |
 | `window:Destroy()` | Disconnect everything and destroy the `ScreenGui`. |
 
-The window is draggable by its header. Closing/minimizing keeps the library alive; `Destroy` is final.
+The window is draggable by its header. Closing hides it; the launcher reopens it. In landscape, the minus button collapses the body into the header; in portrait it hides the window. The square button maximizes/restores. Search opens a field: enter part of a tab's name or subtitle and press Return. A query with no match keeps the current tab.
+
+The footer shows the local clock, your caption, and the executor name when `identifyexecutor()` is available (otherwise `Client`). `SetStatus` replaces the right-side text. `Destroy` removes the window.
 
 ### Tab
 
@@ -203,6 +210,7 @@ Tab methods:
 | Method | Description |
 | --- | --- |
 | `tab:Section(cfg)` | Create a section card. |
+| `tab:Columns()` | Create a responsive pair of containers and return `left, right`. |
 | `tab:Label(cfg)` | Add a small wrapped label. |
 | `tab:Paragraph(cfg)` | Add a wrapped paragraph. |
 | `tab:Divider()` | Add a 1 px separator with vertical padding. |
@@ -210,6 +218,18 @@ Tab methods:
 | `tab:Spacer(px)` | Add vertical space. |
 
 A tab object exposes `name`, `icon`, `content`, `button`, and `sections`. Content is a `ScrollingFrame`; custom UI can be parented under it.
+
+For a dashboard-style layout, `tab:Columns()` returns `left, right` content containers. Each container supports `Section`, `Card`, `Label`, `Paragraph`, `Divider`, and `Spacer`. The columns share a row when there is room and stack on portrait or in a narrow custom window; the same sections and control state are retained during rotation.
+
+```lua
+local left, right = tab:Columns()
+local settings = left:Section({ title = "Settings" })
+settings:Toggle({ text = "Enabled", value = true })
+right:Section({ title = "Session" }):Button({
+    text = "Show status",
+    callback = function() window:Notify({ title = "Ready" }) end,
+})
+```
 
 ### Section
 
@@ -222,7 +242,7 @@ local section = tab:Section({
 })
 ```
 
-A section is a raised card with a 44 px header and an auto-sizing content area. It exposes:
+A section has a readable heading and an auto-sizing content area. Sections with a subtitle use a taller header; sections without one keep a compact heading treatment. It exposes:
 
 - `section.frame` — the card `Frame`.
 - `section.content` — the content `Frame`.
@@ -242,7 +262,7 @@ local button = section:Button({
     text = "Execute",
     description = "Run the current build",
     icon = "play",
-    variant = "primary",   -- "primary" inverts to white on black
+    variant = "primary",   -- black text on a white surface
     callback = function() end,
 })
 ```
@@ -389,13 +409,13 @@ window:Dialog({
 })
 ```
 
-A full-screen dimmed overlay with a centered card. Cancel is a ghost button; Confirm is the white primary button. Escape, the close button, or clicking outside closes the dialog. The callback receives `true` for confirm and `false` for cancel/close, exactly once.
+A full-screen dimmed overlay with a centered card. Cancel is a secondary button; Confirm is the white primary button. Escape, the close button, or clicking outside closes the dialog. The callback receives `true` for confirm and `false` for cancel/close, exactly once.
 
 ### Status tones
 
-`window:SetStatus(text, tone)` updates the footer text and dot:
+`window:SetStatus(text, tone)` updates the right side of the footer:
 
-- `"ok"` — white
+- `"ok"` — muted white
 - `"warn"` — dim gray
 - `"off"` — faint gray
 
@@ -432,13 +452,13 @@ Keep the palette monochrome. SYNUI is intentionally hue-free; the visual hierarc
 
 ## Icons
 
-Thirty icons are embedded:
+Thirty-one icons are embedded:
 
 ```text
 grid, home, bolt, settings, user, shield, key, terminal, activity, layers,
 code, search, close, minus, chevron-down, chevron-right, check, plus,
 arrow-right, copy, trash, moon, sun, menu, lock, cpu, spark, sliders,
-play, dot
+play, maximize, dot
 ```
 
 Use an icon by name anywhere the API accepts `icon`:
@@ -473,18 +493,20 @@ print(SynUI.Icons.defs["bolt"])
 
 ---
 
-## Mobile behavior
+## Responsive behavior
 
-No separate mobile API is required. On touch-first devices, or when the viewport is narrower than 700 px, SYNUI switches to its mobile layout:
+No separate mobile API is required. SYNUI chooses its composition from viewport shape:
 
-- Sidebar hidden; horizontal tab strip under the header.
-- Window sized to 94% × 92% of the viewport.
-- Touch targets at least 42 px; toggles, fields, and key pills grow.
+- Landscape windows keep the wide layout and the narrow icon-only rail, including on touch devices.
+- Portrait or narrow viewports hide the rail and use a horizontal tab strip under the header.
+- Portrait windows use about 94% × 92% of the viewport.
+- Control rows use larger touch targets in portrait; the icon rail keeps 56 px navigation buttons in landscape.
+- High-resolution touch screens use a 1×–2× display scale, based on the viewport's shorter side, for the window, notifications, dialogs, and launcher.
 - Slider and keybind controls accept touch input.
 - Scroll areas use a thin 2 px scrollbar and automatic canvas sizing.
-- Position is preserved and recomputed when the viewport changes.
+- Position is preserved and recomputed when the viewport changes; responsive columns stack when their available width is too small.
 
-Icons and drag handles remain functional with touch. All clickable controls use `Activated`, which Roblox fires for both mouse and touch.
+Buttons use `Activated`, which Roblox fires for both mouse and touch. Sliders and dragging track pointer input; keybind capture still requires a keyboard.
 
 ---
 
@@ -513,7 +535,7 @@ Everything — theme, utilities, icons, controls, layout, feedback, and the publ
 
 ## Verification
 
-Version 1.3.1 passes the control, startup, and demo checks in Lua 5.4 and Luau 0.744 with a mocked Roblox API. Rendering inside Roblox or Delta has not been verified on a device.
+Version 1.4.0 is checked with the control, startup, and demo suites in Lua 5.4 and Luau 0.744 using a mocked Roblox API, plus a source-derived SVG preview at the recorded landscape and phone sizes. The preview approximates fonts and Roblox layout; rendering inside Roblox or Delta has not been verified on a device.
 
 ## License
 
