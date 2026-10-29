@@ -2,7 +2,7 @@
 -- One monochrome palette, one radius scale, one motion vocabulary.
 
 local Theme = {
-	version = "1.3.0",
+	version = "1.3.1",
 
 	colors = {
 		bg = Color3.fromRGB(9, 9, 9),
@@ -465,9 +465,20 @@ function Util.GetParent(cfg)
     if type(cfg) == "table" and cfg.parent ~= nil then
         return cfg.parent
     end
+
+    local function isRenderableRoot(parent)
+        if not parent then
+            return false
+        end
+        local ok, renderable = pcall(function()
+            return parent:IsA("PlayerGui") or parent:IsA("CoreGui")
+        end)
+        return ok and renderable == true
+    end
+
     if type(gethui) == "function" then
         local ok, hui = pcall(gethui)
-        if ok and hui then
+        if ok and isRenderableRoot(hui) then
             return hui
         end
     end
@@ -5900,6 +5911,9 @@ function Core.CreateWindow(cfg)
     addCleanup(Util.MakeDraggable(frame, dragHandle, screenGui))
     connect(dragHandle.InputBegan, function()
         stopTweens()
+        if frameScale then
+            frameScale.Scale = 1
+        end
         frame.Size = UDim2.fromOffset(targetW, targetH)
     end)
     connect(dragHandle.InputEnded, function()
@@ -5950,7 +5964,7 @@ end
 
 
 --[[
-    SYNUI 1.1.1
+    SYNUI 1.3.1
     A single-file, dependency-free monochrome interface library for Roblox.
     Embedded SVG path icons, desktop + mobile, keyboard + touch.
 
@@ -5958,7 +5972,7 @@ end
 ]]
 
 local SynUI = {
-    _VERSION = "1.3.0",
+    _VERSION = "1.3.1",
     Theme = Theme,
     Icons = Icons,
     Util = Util,

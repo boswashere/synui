@@ -52,7 +52,7 @@ That line returns the library table. Use the one-line demo at the top to open a 
 
 SYNUI is executor-friendly:
 
-- It tries `gethui()` when available, then falls back to `PlayerGui` if parenting fails. You can pass `parent` to choose the container yourself.
+- It uses `gethui()` only when it returns a renderable `PlayerGui` or `CoreGui`; otherwise it falls back to `PlayerGui`. You can pass `parent` to choose the container yourself.
 - It calls `syn.protect_gui` or `protect_gui` if the executor exposes one.
 - It uses Roblox's native `task` scheduler, with a `spawn` / `delay` fallback when `task` is unavailable.
 - Each `CreateWindow` call creates a separate GUI. Keep the returned window to update or destroy it.
@@ -72,7 +72,7 @@ local window = SynUI:CreateWindow({
     icon = "grid",
     size = UDim2.fromOffset(760, 500),
     toggleKey = Enum.KeyCode.RightShift,
-    parent = nil,            -- nil = gethui() if available, else PlayerGui
+    parent = nil,            -- nil = renderable gethui() root, else PlayerGui
     launcher = true,         -- floating reopen button
 })
 
@@ -170,7 +170,7 @@ local window = SynUI:CreateWindow({
 | `icon` | string | `"grid"` | Icon name from the icon set. |
 | `size` | `UDim2` | `760×500` | Desktop window size. |
 | `toggleKey` | `Enum.KeyCode` | `RightShift` | Global show/hide key. |
-| `parent` | `Instance?` | `nil` | `nil` resolves to `gethui()` when available, otherwise `PlayerGui`. |
+| `parent` | `Instance?` | `nil` | `nil` resolves to a renderable `gethui()` root when available, otherwise `PlayerGui`. |
 | `launcher` | boolean | `true` | Show a floating reopen button while the window is hidden. |
 
 Window methods:
@@ -513,7 +513,7 @@ Everything — theme, utilities, icons, controls, layout, feedback, and the publ
 
 ## Verification
 
-Version 1.3.0 passes the control, startup, and demo checks in Lua 5.4 and Luau 0.744 with a mocked Roblox API. Rendering inside Roblox or Delta has not been verified on a device.
+Version 1.3.1 passes the control, startup, and demo checks in Lua 5.4 and Luau 0.744 with a mocked Roblox API. Rendering inside Roblox or Delta has not been verified on a device.
 
 ## License
 
