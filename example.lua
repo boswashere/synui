@@ -1,88 +1,80 @@
--- Load the library once, then create your window and controls.
-local SOURCE = "https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"
-local SynUI = loadstring(game:HttpGet(SOURCE))()
-
+-- Project UAI's original showcase. MIT, Copyright (c) 2026 CarlDV.
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"))()
 -- Demo body.
-local window = SynUI:CreateWindow({
-    title = "SYNUI",
-    subtitle = "Black & white",
-    footer = "Example workspace",
-    icon = "grid",
-    toggleKey = Enum.KeyCode.RightShift,
+local window = UI:CreateWindow({
+	Id = "synui-uai-library-showcase",
+	Title = "Fieldwork",
+	Subtitle = "A considered set of tools for your session",
+	Search = true,
 })
 
-local settings = window:Tab({name = "Settings", icon = "sliders", subtitle = "Preferences for this session."})
-local general = settings:Section({title = "General", subtitle = "These values only affect this example."})
+local overview = window:Tab({ Title = "Overview" })
+local controls = window:Tab({ Title = "Controls" })
+local preferences = window:Tab({ Title = "Preferences" })
 
-local enabled = general:Toggle({
-    text = "Enabled",
-    description = "Enable the example feature.",
-    value = true,
-    callback = function(value) window:SetStatus(value and "Enabled" or "Disabled") end,
-})
-local mode = general:Dropdown({
-    text = "Mode",
-    description = "Choose how the feature runs.",
-    options = {"Balanced", "Fast", "Quiet"},
-    value = "Balanced",
-    callback = function(value) window:SetStatus(value) end,
-})
-local speed = general:Slider({text = "Speed", min = 1, max = 20, value = 8, step = 1, suffix = "x"})
-
-local actions = window:Tab({name = "Actions", icon = "play", subtitle = "Buttons, messages and confirmations."})
-local feedback = actions:Section({title = "Feedback"})
-feedback:Button({
-    text = "Send notification",
-    description = "Show a short message above the window.",
-    actionText = "Send",
-    variant = "primary",
-    callback = function()
-        window:Notify({title = "Hello", text = "The button callback ran.", icon = "check", duration = 3})
-    end,
-})
-feedback:Button({
-    text = "Open dialog",
-    description = "Try a confirmation with two choices.",
-    actionText = "Open",
-    callback = function()
-        window:Dialog({title = "Keep these settings?", text = "Your choice appears in the footer.",
-            callback = function(accepted) window:SetStatus(accepted and "Confirmed" or "Cancelled") end})
-    end,
-})
-feedback:Button({
-    text = "Read values",
-    description = "Get() reads the current control state.",
-    actionText = "Read",
-    callback = function()
-        window:Notify({title = "Current values", text = string.format("Enabled: %s\nMode: %s\nSpeed: %sx",
-            tostring(enabled:Get()), tostring(mode:Get()), tostring(speed:Get())), icon = "terminal"})
-    end,
+local session = overview:Section({ Title = "Session", Description = "Small, purposeful controls. One consistent interface." })
+session:Badge({ Text = "Workspace", Default = "Ready", Kind = "Success" })
+local automatic = session:Toggle({ Id = "automatic", Text = "Automatic updates", Description = "Keep the workspace current as things change.", Default = true })
+local radius = session:Slider({ Id = "radius", Text = "Selection radius", Description = "The reach of your next selection.", Min = 10, Max = 100, Step = 5, Default = 40, Suffix = " studs" })
+local progress = session:Progress({ Id = "progress", Text = "Session progress", Default = 64, Persist = false })
+session:Button({
+	Text = "Refresh workspace", Description = "Run a sample action using the current values.", ActionText = "Refresh", Style = "Primary",
+	Callback = function()
+		progress:Set(math.min(100, progress:Get() + 12))
+		window:Notify({ Title = "Workspace refreshed", Content = "Selection radius: " .. radius:Get() .. " studs.", Kind = "Success" })
+	end,
 })
 
-local input = window:Tab({name = "Input", icon = "terminal", subtitle = "Text fields and keyboard shortcuts."})
-local identity = input:Section({title = "Identity"})
-identity:Input({
-    text = "Display name",
-    description = "Text is saved when the field loses focus.",
-    placeholder = "Your name",
-    callback = function(value) window:SetStatus(value == "" and "Ready" or "Saved: " .. value) end,
+local inputs = controls:Section({ Title = "Inputs", Description = "Values stay separate from your application logic." })
+inputs:Input({ Id = "name", Text = "Workspace name", Default = "My workspace", Placeholder = "Give this workspace a name" })
+inputs:Input({ Id = "limit", Text = "Item limit", Description = "A number between 1 and 100.", Numeric = true, Min = 1, Max = 100, Default = 20 })
+inputs:Dropdown({
+	Id = "mode", Text = "Selection mode", Default = "nearest",
+	Options = { { Label = "Nearest first", Value = "nearest" }, { Label = "In view", Value = "visible" }, { Label = "All available", Value = "all" } },
 })
-identity:Keybind({
-    text = "Example key",
-    description = "Select the field and press a key. Escape cancels.",
-    value = Enum.KeyCode.E,
-    callback = function(key) window:SetStatus("Selected " .. key.Name) end,
+inputs:Dropdown({ Id = "filters", Text = "Include", Multi = true, Default = { "Players", "Objects" }, Options = { "Players", "Objects", "Markers", "Effects" } })
+-- Player choices use UAI's existing initial fallback in this monochrome build.
+local function playerOptions()
+	local options = {}
+	for _, player in ipairs(game:GetService("Players"):GetPlayers()) do
+		options[#options + 1] = {
+			Label = player.DisplayName,
+			Value = player.UserId,
+			Image = string.format("rbxthumb://type=AvatarHeadShot&id=%.0f&w=150&h=150", player.UserId),
+		}
+	end
+	return options
+end
+local target = inputs:Dropdown({ Id = "target", Text = "Target player", Placeholder = "No players yet", Options = playerOptions() })
+inputs:Button({ Text = "Refresh players", ActionText = "Refresh", Callback = function()
+	local options = playerOptions()
+	target:SetOptions(options)
+	window:Notify({ Title = "Player list refreshed", Content = tostring(#options) .. " player(s) available.", Kind = "Success" })
+end })
+inputs:Checkbox({ Id = "remember", Text = "Remember selection", Description = "Preserve your selection between refreshes.", Default = true })
+inputs:Keybind({
+	Id = "shortcut", Text = "Quick notification", Default = Enum.KeyCode.K,
+	Callback = function() window:Notify({ Title = "Shortcut received", Content = "Your keybind is connected." }) end,
 })
 
-local about = window:Tab({name = "About", icon = "layers", subtitle = "A single-file Roblox interface library."})
-about:Paragraph({text = "Search filters controls on the current page. Drag the header to move the window, or the bottom-right corner to resize it. The restore button brings back a hidden window."})
-local management = about:Section({title = "Window"})
-management:Button({text = "Default size", description = "Restore the window's original dimensions.", actionText = "Reset",
-    callback = function() window:ResetSize() end})
-management:Button({text = "Hide window", description = "Keep the controls and their values.", actionText = "Hide",
-    callback = function() window:Toggle() end})
-management:Button({text = "Close demo", description = "Remove this window and its controls.", actionText = "Close",
-    callback = function()
-        window:Dialog({title = "Close demo?", text = "This removes the window and stops the example.", confirmText = "Close",
-            callback = function(confirmed) if confirmed then window:Destroy() end end})
-    end})
+-- Appearance preferences are supplied automatically by the library.
+local profiles = preferences:Section({ Title = "Preferences", Description = "Save a profile explicitly whenever you need it." })
+profiles:Input({ Id = "notes", Text = "Session notes", MultiLine = true, Placeholder = "A few notes for this session…", Persist = false })
+profiles:Button({ Text = "Save profile", ActionText = "Save", Callback = function()
+	local ok, result = window:SaveConfig("default")
+	window:Notify({ Title = ok and "Profile saved" or "Could not save", Content = tostring(result), Kind = ok and "Success" or "Warning" })
+end })
+profiles:Button({ Text = "Load profile", ActionText = "Load", Callback = function()
+	local ok, result = window:LoadConfig("default")
+	window:Notify({ Title = ok and "Profile loaded" or "Could not load", Content = ok and "Your controls have been restored." or tostring(result), Kind = ok and "Success" or "Warning" })
+end })
+local more = preferences:Section({ Title = "More", Collapsible = true })
+more:Button({ Text = "About this workspace", ActionText = "About", Callback = function()
+	window:Dialog({ Title = "Fieldwork", Content = "An example built entirely with Project UAI UI LIB. Each control is declared once; the library handles the interface." })
+end })
+more:Button({ Text = "Reset session", ActionText = "Reset", Style = "Danger", Callback = function()
+	window:Confirm({ Title = "Reset this session?", Content = "Return the selection and progress to their defaults.", ConfirmText = "Reset", Danger = true, Callback = function()
+		automatic:Reset(); radius:Reset(); progress:Reset()
+	end })
+end })
+return window
