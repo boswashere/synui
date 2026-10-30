@@ -1,219 +1,88 @@
---[[
-    example.lua
-
-    Run this in an executor. It downloads SYNUI, opens a demo window, and
-    leaves it open so you can click around. Change the names, controls, and
-    callbacks to fit your own script.
-
-    The loader is the important part:
-
-        local SynUI = loadstring(game:HttpGet(SOURCE))()
-
-    game:HttpGet gets the file as text. loadstring turns that text into a
-    function. The final () runs the function, and the function returns the
-    SynUI table. Keep that table and reuse it.
-]]
-
+-- Load the library once, then create your window and controls.
 local SOURCE = "https://raw.githubusercontent.com/boswashere/synui/refs/heads/main/synui.lua"
 local SynUI = loadstring(game:HttpGet(SOURCE))()
 
 -- Demo body.
--- SYNUI chooses a renderable GUI root automatically.
 local window = SynUI:CreateWindow({
     title = "SYNUI",
-    footer = "Universal interface",
+    subtitle = "Black & white",
+    footer = "Example workspace",
     icon = "grid",
     toggleKey = Enum.KeyCode.RightShift,
-    launcher = true,
 })
 
-local home = window:Tab({
-    name = "Home",
-    icon = "home",
-    subtitle = "Your controls in one place.",
+local settings = window:Tab({name = "Settings", icon = "sliders", subtitle = "Preferences for this session."})
+local general = settings:Section({title = "General", subtitle = "These values only affect this example."})
+
+local enabled = general:Toggle({
+    text = "Enabled",
+    description = "Enable the example feature.",
+    value = true,
+    callback = function(value) window:SetStatus(value and "Enabled" or "Disabled") end,
 })
+local mode = general:Dropdown({
+    text = "Mode",
+    description = "Choose how the feature runs.",
+    options = {"Balanced", "Fast", "Quiet"},
+    value = "Balanced",
+    callback = function(value) window:SetStatus(value) end,
+})
+local speed = general:Slider({text = "Speed", min = 1, max = 20, value = 8, step = 1, suffix = "x"})
 
-local homeLeft, homeRight = home:Columns()
-local actions = homeLeft:Section({title = "Quick actions"})
-
--- Buttons run whatever function you pass in. This one opens a notification
--- and changes the footer text.
-actions:Button({
+local actions = window:Tab({name = "Actions", icon = "play", subtitle = "Buttons, messages and confirmations."})
+local feedback = actions:Section({title = "Feedback"})
+feedback:Button({
     text = "Send notification",
-    description = "A small message above the window",
-    icon = "play",
+    description = "Show a short message above the window.",
+    actionText = "Send",
     variant = "primary",
     callback = function()
-        window:Notify({
-            title = "Hello",
-            text = "The button callback ran.",
-            icon = "check",
-            duration = 3,
-        })
-        window:SetStatus("READY", "ok")
+        window:Notify({title = "Hello", text = "The button callback ran.", icon = "check", duration = 3})
     end,
 })
-
-actions:Button({
+feedback:Button({
     text = "Open dialog",
-    description = "Try the confirmation panel",
-    icon = "layers",
+    description = "Try a confirmation with two choices.",
+    actionText = "Open",
     callback = function()
-        window:Dialog({title = "Keep this window?", text = "This is a demo confirmation. Your choice appears in the footer.",
+        window:Dialog({title = "Keep these settings?", text = "Your choice appears in the footer.",
             callback = function(accepted) window:SetStatus(accepted and "Confirmed" or "Cancelled") end})
     end,
 })
-
-local windowSection = homeRight:Section({title = "Window"})
-windowSection:Button({text = "Hide window", icon = "minus", callback = function() window:Toggle() end})
-windowSection:Button({text = "Open controls", icon = "sliders", callback = function() window:Search("Controls") end})
-
--- Toggles keep their own state. Get() reads it later.
-local controls = window:Tab({
-    name = "Controls",
-    icon = "sliders",
-    subtitle = "Switches, sliders and selections.",
-})
-
-local leftControls, rightControls = controls:Columns()
-
-local controlSection = leftControls:Section({
-    title = "General",
-})
-
-local enabled = controlSection:Toggle({
-    text = "Enabled",
-    description = "Enable the example feature",
-    value = true,
-    callback = function(value)
-        window:SetStatus(value and "ON" or "OFF", value and "ok" or "off")
-    end,
-})
-
--- Sliders clamp to min/max and snap to step. The callback receives a number.
-local speed = controlSection:Slider({
-    text = "Speed",
-    min = 1,
-    max = 20,
-    value = 8,
-    step = 1,
-    suffix = "x",
-    callback = function(value)
-        -- Do something with value here. This example reads it later with speed:Get().
-    end,
-})
-
--- A single dropdown returns the selected string.
-local mode = controlSection:Dropdown({
-    text = "Mode",
-    options = { "Balanced", "Fast", "Quiet" },
-    value = "Balanced",
-    callback = function(value)
-        window:SetStatus(string.upper(value), "ok")
-    end,
-})
-
-local statusSection = rightControls:Section({
-    title = "Session",
-})
-
-statusSection:Button({
+feedback:Button({
     text = "Read values",
-    description = "Read values with Get()",
-    icon = "activity",
+    description = "Get() reads the current control state.",
+    actionText = "Read",
     callback = function()
-        window:Notify({
-            title = "Current values",
-            text = string.format(
-                "enabled=%s  speed=%s  mode=%s",
-                tostring(enabled:Get()),
-                tostring(speed:Get()),
-                tostring(mode:Get())
-            ),
-            icon = "terminal",
-            duration = 5,
-        })
+        window:Notify({title = "Current values", text = string.format("Enabled: %s\nMode: %s\nSpeed: %sx",
+            tostring(enabled:Get()), tostring(mode:Get()), tostring(speed:Get())), icon = "terminal"})
     end,
 })
 
--- Text inputs fire when the field loses focus or when Return is pressed.
-local inputTab = window:Tab({
-    name = "Input",
-    icon = "terminal",
-    subtitle = "Text and keybinds",
+local input = window:Tab({name = "Input", icon = "terminal", subtitle = "Text fields and keyboard shortcuts."})
+local identity = input:Section({title = "Identity"})
+identity:Input({
+    text = "Display name",
+    description = "Text is saved when the field loses focus.",
+    placeholder = "Your name",
+    callback = function(value) window:SetStatus(value == "" and "Ready" or "Saved: " .. value) end,
+})
+identity:Keybind({
+    text = "Example key",
+    description = "Select the field and press a key. Escape cancels.",
+    value = Enum.KeyCode.E,
+    callback = function(key) window:SetStatus("Selected " .. key.Name) end,
 })
 
-local inputSection = inputTab:Section({
-    title = "Identity",
-    subtitle = "Try the fields",
-    icon = "user",
-})
-
-local name = inputSection:Input({
-    text = "Name",
-    placeholder = "Type something",
-    callback = function(value)
-        if value ~= "" then
-            window:Notify({
-                title = "Name saved",
-                text = value,
-                icon = "check",
-            })
-        end
-    end,
-})
-
--- Click the key pill, then press a key. Escape cancels capture.
-local bind = inputSection:Keybind({
-    text = "Toggle key",
-    value = Enum.KeyCode.RightShift,
-    callback = function(key)
-        window:Notify({
-            title = "Key changed",
-            text = tostring(key),
-            icon = "key",
-        })
-    end,
-})
-
--- Get() works on every control, so the callbacks can read current values later.
-
-local about = window:Tab({
-    name = "About",
-    icon = "layers",
-    subtitle = "What this is",
-})
-
-about:Paragraph({
-    text = "This is a plain example of the public API. The window, tabs, sections, and controls are all built from tables you pass in.",
-})
-
-about:Card({
-    icon = "spark",
-    title = "One file",
-    body = "SYNUI is loaded from GitHub with loadstring. There is no setup step after that.",
-})
-
-local aboutSection = about:Section({
-    title = "Cleanup",
-    subtitle = "When you are done",
-    icon = "trash",
-})
-
-aboutSection:Button({
-    text = "Close demo",
-    description = "Removes the window",
-    icon = "trash",
+local about = window:Tab({name = "About", icon = "layers", subtitle = "A single-file Roblox interface library."})
+about:Paragraph({text = "Search filters controls on the current page. Drag the header to move the window, or the bottom-right corner to resize it. The restore button brings back a hidden window."})
+local management = about:Section({title = "Window"})
+management:Button({text = "Default size", description = "Restore the window's original dimensions.", actionText = "Reset",
+    callback = function() window:ResetSize() end})
+management:Button({text = "Hide window", description = "Keep the controls and their values.", actionText = "Hide",
+    callback = function() window:Toggle() end})
+management:Button({text = "Close demo", description = "Remove this window and its controls.", actionText = "Close",
     callback = function()
-        window:Dialog({
-            title = "Close demo?",
-            text = "This removes the window and stops the example.",
-            confirmText = "Close",
-            callback = function(confirmed)
-                if confirmed then
-                    window:Destroy()
-                end
-            end,
-        })
-    end,
-})
+        window:Dialog({title = "Close demo?", text = "This removes the window and stops the example.", confirmText = "Close",
+            callback = function(confirmed) if confirmed then window:Destroy() end end})
+    end})
